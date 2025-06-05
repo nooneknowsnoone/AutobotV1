@@ -25,7 +25,7 @@ module.exports.run = async function ({ api, event }) {
       return api.sendMessage("Error: No advice returned.", threadID, messageID);
     }
 
-    return api.sendMessage(`Advice #${data.id}:\n${data.advice}`, threadID, messageID);
+    return api.sendMessage(`•Advice\n${data.advice}`, threadID, messageID);
   } catch (error) {
     console.error("Advice command error:", error.message);
     return api.sendMessage("Error: Unable to retrieve advice.", threadID, messageID);
