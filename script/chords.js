@@ -1,14 +1,5 @@
 const axios = require('axios');
 
-// Helper to split long messages into chunks
-function splitMessageIntoChunks(message, chunkSize) {
-  const chunks = [];
-  for (let i = 0; i < message.length; i += chunkSize) {
-    chunks.push(message.slice(i, i + chunkSize));
-  }
-  return chunks;
-}
-
 module.exports.config = {
   name: 'chords',
   version: '1.0.0',
@@ -43,7 +34,7 @@ module.exports.run = async function({ api, event, args }) {
       return api.sendMessage('Error: Song chords not found.', threadID, messageID);
     }
 
-    let message = `
+    const message = `
 -------------
 Title: ${data.chords.title}
 Artist: ${data.chords.artist}
@@ -55,14 +46,7 @@ Chords:
 ${data.chords.chords}
 -------------`;
 
-    if (message.length > 2000) {
-      const chunks = splitMessageIntoChunks(message, 1900);
-      for (const chunk of chunks) {
-        await api.sendMessage(chunk, threadID, messageID);
-      }
-    } else {
-      await api.sendMessage(message, threadID, messageID);
-    }
+    await api.sendMessage(message, threadID, messageID);
 
   } catch (error) {
     console.error('Error fetching chords:', error.message);
