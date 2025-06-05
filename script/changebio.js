@@ -5,24 +5,31 @@ module.exports.config = {
   countDown: 5,
   role: 2,
   shortDescription: {
-    vi: " ",
-    en: "change bot bio ",
+    vi: "",
+    en: "Change bot bio",
   },
   longDescription: {
-    vi: " ",
-    en: "change bot bio ",
+    vi: "",
+    en: "Change the bot's bio text",
   },
   category: "owner",
   guide: {
-    en: "{pn} (text)",
+    en: "{pn} <new bio text>",
   },
 };
 
 module.exports.run = async ({ args, message, api }) => {
+  const newBio = args.join(" ").trim();
+
+  if (!newBio) {
+    return message.reply("⚠️ Please provide a new bio text.\nExample: changebio Hello, I'm your bot.");
+  }
+
   try {
-    api.changeBio(args.join(" "));
-    message.reply("admin change bot bio to:" + args.join(" "));
+    await api.changeBio(newBio); // Await the changeBio call if it supports Promise
+    message.reply(`✅ Bot bio successfully changed to:\n"${newBio}"`);
   } catch (error) {
-    console.error(error);
+    console.error("Failed to change bot bio:", error);
+    message.reply("❌ Failed to change bot bio. Please check the logs for details.");
   }
 };
