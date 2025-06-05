@@ -39,7 +39,7 @@ module.exports.run = async function ({ api, event, args }) {
       );
     }
 
-    const message = `Ashley [SPG]:\n${data.response}`;
+    const message = `•Ashley [SPG]:\n${data.response}`;
     return api.sendMessage(message, threadID, messageID);
 
   } catch (error) {
