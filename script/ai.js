@@ -25,7 +25,7 @@ module.exports.run = async function({ api, event, args }) {
     return api.sendMessage("❌ Provide a question or reply to an image.", threadId, messageId);
   }
 
-  api.sendMessage("⏳ Processing your request using Gemini...", threadId, async (err, info) => {
+  api.sendMessage("⏳ Processing your request...", threadId, async (err, info) => {
     if (err) return;
 
     try {
