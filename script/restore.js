@@ -1,49 +1,41 @@
 const axios = require('axios');
-const fs = require('fs-extra');
-const path = require('path');
 
 module.exports.config = {
-  name: "restore",
+  name: "rewriter",
   version: "1.0.0",
   role: 0,
-  credits: "developer",
+  hasPrefix: true,
   aliases: [],
-  usages: "<reply to image>",
-  cooldown: 5,
+  description: "Rewrite a paragraph using the Zen API.",
+  usage: "rewriter <text>",
+  credits: "Developer",
+  cooldown: 3,
 };
 
-module.exports.run = async function ({ api, event }) {
-  const { threadID, messageID, messageReply } = event;
+module.exports.run = async function ({ api, event, args }) {
+  const { threadID, messageID, senderID } = event;
+  const send = (msg) => api.sendMessage(msg, threadID, messageID);
 
-  // Check if user replied to an image
-  if (!messageReply || !messageReply.attachments || messageReply.attachments.length === 0) {
-    return api.sendMessage("❌ Please reply to an image first.", threadID, messageID);
+  const query = args.join(' ');
+
+  if (!query) {
+    return send(
+      "Please provide a paragraph to rewrite.\nExample: rewriter Love is a complex and multifaceted emotion..."
+    );
   }
-
-  const attachment = messageReply.attachments[0];
-  if (attachment.type !== "photo") {
-    return api.sendMessage("❌ The replied message must be a photo.", threadID, messageID);
-  }
-
-  const imageUrl = attachment.url;
-  const tempPath = path.join(__dirname, 'cache', `restore_${Date.now()}.jpg`);
-  const apiUrl = `https://rapido.zetsu.xyz/api/restore?imageUrl=${encodeURIComponent(imageUrl)}`;
 
   try {
-    api.sendMessage("⌛ Restoring image, please wait...", threadID, messageID);
+    const apiUrl = `https://zen-api.gleeze.com/api/rewrite-article?text=${encodeURIComponent(query)}`;
+    const { data } = await axios.get(apiUrl);
 
-    const response = await axios.get(apiUrl, { responseType: 'arraybuffer' });
+    if (!data || typeof data !== 'string') {
+      return send("Error: Unexpected response from Zen API.");
+    }
 
-    fs.ensureDirSync(path.dirname(tempPath));
-    fs.writeFileSync(tempPath, Buffer.from(response.data, "binary"));
-
-    api.sendMessage({
-      body: "✅ Here is your restored image!",
-      attachment: fs.createReadStream(tempPath)
-    }, threadID, () => fs.unlinkSync(tempPath), messageID);
+    send("Rewritten Article:\n" + data);
 
   } catch (error) {
-    console.error("Error restoring image:", error);
-    api.sendMessage("❌ An error occurred while restoring the image. Please try again later.", threadID, messageID);
+    console.error('rewriter command error:', error.message);
+    send("Error: Failed to connect to Zen API.");
   }
 };
