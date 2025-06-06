@@ -22,7 +22,7 @@ module.exports.run = async function({ api, event, args }) {
     }
 
     const text = args.join(" ");
-    const apiUrl = `https://api.zetsu.xyz/gen/brat?text=${encodeURIComponent(text)}&apikey=80836f3451c2b3392b832988e7b73cdb`;
+    const apiUrl = `https://jonell01-ccprojectsapihshs.hf.space/api/brat?text=${encodeURIComponent(text)}&type=direct`;
     const tempPath = path.join(__dirname, `brat_${Date.now()}.png`);
 
     try {
