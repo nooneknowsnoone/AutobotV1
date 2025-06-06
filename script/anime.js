@@ -12,7 +12,7 @@ module.exports.config = {
 
 module.exports.run = async function ({ api, event, args }) {
   const { threadID, messageID } = event;
-  const apiUrl = 'https://mademoiselle1-rest-apis.onrender.com/api/anime-random';
+  const apiUrl = 'https://mademoiselle2-rest-apis.onrender.com/api/anime-random';
 
   try {
     api.sendMessage("🎌 Fetching a random anime character...", threadID, async () => {
