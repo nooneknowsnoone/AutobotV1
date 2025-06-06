@@ -14,9 +14,9 @@ module.exports.handleEvent = async ({
     } = info[event.logMessageData?.leftParticipantFbId];
     api.addUserToGroup(event.logMessageData?.leftParticipantFbId, event.threadID, (error) => {
       if (error) {
-        api.sendMessage(`di ko ma add si ${name} iwan ko kong bakit`, event.threadID);
+        api.sendMessage(`Unable to re-add member ${name} to the group!`, event.threadID);
       } else {
-        api.sendMessage(`boss ${name} bawal kapo mag leave sabi ni Daniel`, event.threadID);
+        api.sendMessage(`Active antiout mode, ${name} has been re-added to the group successfully!`, event.threadID);
       }
     });
   }
