@@ -7,7 +7,7 @@ module.exports.config = {
   hasPrefix: false,
   aliases: ['tempmail'],
   description: 'Generate a temporary email or check inbox messages.',
-  usage: 'temp gen | temp inbox <email>',
+  usage: 'tempmail gen | tempmail inbox <email>',
   credits: 'Developer',
   cooldown: 3,
 };
@@ -19,7 +19,7 @@ module.exports.run = async function({ api, event, args }) {
 
   if (!subCommand) {
     return api.sendMessage(
-      'Usage:\n• temp gen\n• temp inbox <email>',
+      'Usage:\n• tempmail gen\n• tempmail inbox <email>',
       event.threadID,
       event.messageID
     );
@@ -58,7 +58,7 @@ module.exports.run = async function({ api, event, args }) {
 
         return api.editMessage(inboxText, info.messageID);
       } else {
-        return api.editMessage('Usage:\n• temp gen\n• temp inbox <email>', info.messageID);
+        return api.editMessage('Usage:\n• tempmail gen\n• tempmail inbox <email>', info.messageID);
       }
 
     } catch (error) {
