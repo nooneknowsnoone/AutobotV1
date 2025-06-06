@@ -1,46 +1,48 @@
-const axios = require("axios");
-const fs = require("fs-extra");
-const path = require("path");
-
-const startTime = Date.now(); // Save this globally for uptime tracking
+const os = require('os');
+const pidusage = require('pidusage');
 
 module.exports.config = {
-    name: "uptime",
-    version: "1.1.0",
-    permission: 0,
-    description: "Get the bot uptime image",
-    prefix: false,
-    premium: false,
-    credits: "developer",
-    cooldowns: 5,
-    category: "system"
+                name: "uptime",
+                version: "1.0.2",
+                role: 0,
+                description: "uptime",
+                hasPrefix: false,
+                cooldowns: 5,
+                aliases: ["up"]
 };
 
-module.exports.run = async function ({ api, event }) {
-    try {
-        // Calculate uptime
-        const uptimeMs = Date.now() - startTime;
-        const hours = Math.floor(uptimeMs / (1000 * 60 * 60));
-        const minutes = Math.floor((uptimeMs / (1000 * 60)) % 60);
-        const seconds = Math.floor((uptimeMs / 1000) % 60);
+function byte2mb(bytes) {
+                const units = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+                let l = 0, n = parseInt(bytes, 10) || 0;
+                while (n >= 1024 && ++l) n = n / 1024;
+                return `${n.toFixed(n < 10 && l > 0 ? 1 : 0)} ${units[l]}`;
+}
 
-        const imageUrl = `https://kaiz-apis.gleeze.com/api/uptime?instag=Ai Assistant &ghub=AI Assistant&fb=AI Assistant &hours=${hours}&minutes=${minutes}&seconds=${seconds}&botname=AI Assistant&apikey=bbcc44b9-4710-41c7-8034-fa2000ea7ae5`;
-        const fileName = `uptime_${event.senderID}.png`;
-        const filePath = path.join(__dirname, "cache", fileName);
+function getUptime(uptime) {
+                const days = Math.floor(uptime / (3600 * 24));
+                const hours = Math.floor((uptime % (3600 * 24)) / 3600);
+                const mins = Math.floor((uptime % 3600) / 60);
+                const seconds = Math.floor(uptime % 60);
+                const cores = `Cores: ${os.cpus().length}`;
 
-        const response = await axios.get(imageUrl, { responseType: "arraybuffer" });
-        await fs.ensureDir(path.dirname(filePath));
-        await fs.writeFile(filePath, response.data);
+                return `Uptime: ${days} days, ${hours} hours, ${mins} minutes, and ${seconds} seconds`;
+}
 
-        api.sendMessage({
-            body: "✅ AI Assistant is alive and running!",
-            attachment: fs.createReadStream(filePath)
-        }, event.threadID, () => {
-            fs.unlink(filePath).catch(() => {});
-        }, event.messageID);
+module.exports.run = async ({ api, event }) => {
+                const time = process.uptime();
+                const hours = Math.floor(time / (60 * 60));
+                const minutes = Math.floor((time % (60 * 60)) / 60);
+                const seconds = Math.floor(time % 60);
 
-    } catch (error) {
-        console.error("Uptime error:", error.message);
-        api.sendMessage("❌ Failed to fetch uptime image.", event.threadID, event.messageID);
-    }
+                const usage = await pidusage(process.pid);
+
+                const osInfo = {
+                                platform: os.platform(),
+                                architecture: os.arch()
+                };
+
+                const timeStart = Date.now();
+                const returnResult = `Assistant has been working for ${hours} hour(s) ${minutes} minute(s) ${seconds} second(s).\n\n❖ Cpu usage: ${usage.cpu.toFixed(1)}%\n❖ RAM usage: ${byte2mb(usage.memory)}\n❖ Cores: ${os.cpus().length}\n❖ Ping: ${Date.now() - timeStart}ms\n❖ Operating System Platform: ${osInfo.platform}\n❖ System CPU Architecture: ${osInfo.architecture}`;
+
+                return api.sendMessage(returnResult, event.threadID, event.messageID);
 };
