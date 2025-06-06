@@ -1,56 +1,54 @@
-const axios = require("axios");
-const fs = require("fs");
-const path = require("path");
+const axios = require('axios');
+const { sendMessage } = require('../handles/sendMessage');
 
-module.exports.config = {
-    name: "fbpfp",
-    version: "1.0.0",
-    role: 0,
-    credits: "developer",
-    description: "Fetch a Facebook profile picture using UID",
-    hasPrefix: false,
-    aliases: ["pfp", "facebookpfp"],
-    usage: "[fbpfp <uid>]",
-    cooldown: 5
-};
+module.exports = {
+  name: 'profile',
+  description: 'Fetch a themed Facebook profile using UID.',
+  author: 'developer',
 
-module.exports.run = async function({ api, event, args }) {
-    const { threadID, messageID } = event;
+  async execute(senderId, args, pageAccessToken) {
+    if (!args || args.length === 0) {
+      return sendMessage(
+        senderId,
+        {
+          text: '𝗣𝗹𝗲𝗮𝘀𝗲 𝗽𝗿𝗼𝘃𝗶𝗱𝗲 𝗮 𝗙𝗮𝗰𝗲𝗯𝗼𝗼𝗸 𝗨𝗜𝗗 𝘁𝗼 𝗴𝗲𝗻𝗲𝗿𝗮𝘁𝗲 𝘁𝗵𝗲𝗺𝗲𝗱 𝗽𝗿𝗼𝗳𝗶𝗹𝗲.',
+        },
+        pageAccessToken
+      );
+    }
 
     const uid = args[0];
-    if (!uid || isNaN(uid)) {
-        return api.sendMessage("👤 Usage: fbpfp <uid>\nExample: fbpfp 1000123456789", threadID, messageID);
-    }
 
-    const url = `https://kaiz-apis.gleeze.com/api/facebookpfp?uid=${encodeURIComponent(uid)}&apikey=bbcc44b9-4710-41c7-8034-fa2000ea7ae5`;
-    const imagePath = path.join(__dirname, `fbpfp_${Date.now()}.jpg`);
+    await sendMessage(
+      senderId,
+      { text: '⏳ 𝗚𝗲𝗻𝗲𝗿𝗮𝘁𝗶𝗻𝗴 𝗽𝗿𝗼𝗳𝗶𝗹𝗲 𝗶𝗺𝗮𝗴𝗲, 𝗽𝗹𝗲𝗮𝘀𝗲 𝘄𝗮𝗶𝘁...' },
+      pageAccessToken
+    );
 
     try {
-        api.sendMessage("⏳ Fetching Facebook profile picture, please wait...", threadID);
+      const imageUrl = `https://betadash-api-swordslush-production.up.railway.app/profile?uid=${encodeURIComponent(uid)}`;
 
-        const response = await axios({
-            url,
-            method: "GET",
-            responseType: "stream"
-        });
-
-        const writer = fs.createWriteStream(imagePath);
-        response.data.pipe(writer);
-
-        writer.on("finish", async () => {
-            await api.sendMessage({
-                attachment: fs.createReadStream(imagePath)
-            }, threadID);
-            fs.unlinkSync(imagePath);
-        });
-
-        writer.on("error", err => {
-            console.error("Write stream error:", err);
-            api.sendMessage("❌ Error saving the profile picture.", threadID);
-        });
-
+      await sendMessage(
+        senderId,
+        {
+          attachment: {
+            type: 'image',
+            payload: {
+              url: imageUrl,
+            },
+          },
+        },
+        pageAccessToken
+      );
     } catch (error) {
-        console.error("fbpfp Command Error:", error.message);
-        api.sendMessage("❌ Failed to fetch Facebook profile picture.", threadID);
+      console.error('Profile command error:', error);
+      await sendMessage(
+        senderId,
+        {
+          text: '❌ 𝗙𝗮𝗶𝗹𝗲𝗱 𝘁𝗼 𝗳𝗲𝘁𝗰𝗵 𝗽𝗿𝗼𝗳𝗶𝗹𝗲 𝗶𝗺𝗮𝗴𝗲. 𝗧𝗿𝘆 𝗮𝗴𝗮𝗶𝗻 𝗹𝗮𝘁𝗲𝗿.',
+        },
+        pageAccessToken
+      );
     }
+  },
 };
