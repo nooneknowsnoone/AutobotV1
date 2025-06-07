@@ -23,7 +23,7 @@ module.exports.run = async function({ api, event, args }) {
             return api.sendMessage("❌ Usage: spank <uid1> | <uid2>\nExample: spank 4 | 6", event.threadID);
         }
 
-        const url = `https://betadash-api-swordslush-production.up.railway.app/spank?uid1=${uid1}&uid2=${uid2}`;
+        const url = `https://api-canvass.vercel.app/spank?uid1=${uid1}&uid2=${uid2}`;
         const imagePath = path.join(__dirname, "spank.png");
 
         api.sendMessage("🍑 Generating spank image, please wait...", event.threadID);
