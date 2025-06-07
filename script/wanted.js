@@ -26,7 +26,7 @@ module.exports.run = async function({ api, event, args }) {
         }
 
         // Construct the API URL
-        const url = `https://betadash-api-swordslush-production.up.railway.app/wanted?userid=${uid}`;
+        const url = `https://api-canvass.vercel.app/wanted?userid=${uid}`;
         const imagePath = path.join(__dirname, "wanted.png");
 
         // Notify the user that the image is being generated
