@@ -1,7 +1,3 @@
-const axios = require("axios");
-const fs = require("fs");
-const path = require("path");
-
 module.exports.config = {
     name: "trump",
     version: "1.0.0",
@@ -14,21 +10,24 @@ module.exports.config = {
     cooldown: 5
 };
 
+const axios = require("axios");
+const fs = require("fs");
+const path = require("path");
+
 module.exports.run = async function({ api, event, args }) {
-    const { threadID, messageID } = event;
-
-    const input = args.join(" ").split("|").map(x => x.trim());
-    const [uid, text] = input;
-
-    if (!uid || !text) {
-        return api.sendMessage("❌ Usage: trump <uid> | <text>\nExample: trump 1000123456789 | my love still by you", threadID, messageID);
-    }
-
-    const url = `https://betadash-api-swordslush-production.up.railway.app/trump?userid=${uid}&text=${encodeURIComponent(text)}`;
-    const imagePath = path.join(__dirname, `trump_${Date.now()}.png`);
-
     try {
-        api.sendMessage("🇺🇸 Generating Trump image, please wait...", threadID);
+        const input = args.join(" ").split("|").map(x => x.trim());
+        const [uid, text] = input;
+
+        if (!uid || !text) {
+            api.sendMessage("❌ Usage: trump <uid> | <text>\nExample: trump 1000123456789 | my love still by you", event.threadID);
+            return;
+        }
+
+        const url = `https://betadash-api-swordslush-production.up.railway.app/trump?userid=${uid}&text=${encodeURIComponent(text)}`;
+        const imagePath = path.join(__dirname, "trump.png");
+
+        api.sendMessage("🇺🇸 Generating Trump image, please wait...", event.threadID);
 
         const response = await axios({
             url,
@@ -40,19 +39,24 @@ module.exports.run = async function({ api, event, args }) {
         response.data.pipe(writer);
 
         writer.on("finish", async () => {
-            await api.sendMessage({
-                attachment: fs.createReadStream(imagePath)
-            }, threadID);
-            fs.unlinkSync(imagePath);
+            try {
+                await api.sendMessage({
+                    attachment: fs.createReadStream(imagePath)
+                }, event.threadID);
+                fs.unlinkSync(imagePath);
+            } catch (sendErr) {
+                console.error("Send error:", sendErr);
+                api.sendMessage("❌ An error occurred while sending the image.", event.threadID);
+            }
         });
 
-        writer.on("error", err => {
+        writer.on("error", (err) => {
             console.error("Write stream error:", err);
-            api.sendMessage("❌ Error saving the image.", threadID);
+            api.sendMessage("❌ Error saving the image.", event.threadID);
         });
 
     } catch (error) {
         console.error("Trump Command Error:", error.message);
-        api.sendMessage("❌ Failed to generate Trump image.", threadID);
+        api.sendMessage("❌ Failed to generate Trump image.", event.threadID);
     }
 };
