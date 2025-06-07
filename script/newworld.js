@@ -15,26 +15,31 @@ module.exports.config = {
 };
 
 module.exports.run = async function({ api, event, args }) {
-    const { threadID, messageID } = event;
-
-    const input = args.join(" ");
-    if (!input.includes("|")) {
-        return api.sendMessage("🌍 Usage: newworld <uid> | <text>\nExample: newworld 1000123456789 | Hello world", threadID, messageID);
-    }
-
-    const [uid, ...textParts] = input.split("|").map(part => part.trim());
-    const text = textParts.join(" ");
-
-    if (!uid || !text || isNaN(uid)) {
-        return api.sendMessage("🌍 Invalid input. Make sure the UID is numeric and text is provided.\nUsage: newworld <uid> | <text>", threadID, messageID);
-    }
-
-    const url = `https://betadash-api-swordslush-production.up.railway.app/new-world?userid=${uid}&text=${encodeURIComponent(text)}`;
-    const imagePath = path.join(__dirname, `newworld_${Date.now()}.png`);
-
     try {
-        api.sendMessage("⏳ Generating New World image, please wait...", threadID);
+        const input = args.join(" ");
+        
+        // Validate input format
+        if (!input.includes("|")) {
+            return api.sendMessage("🌍 Usage: newworld <uid> | <text>\nExample: newworld 1000123456789 | Hello world", event.threadID);
+        }
 
+        // Parse UID and text
+        const [uid, ...textParts] = input.split("|").map(part => part.trim());
+        const text = textParts.join(" ");
+
+        // Validate UID and text
+        if (!uid || !text || isNaN(uid)) {
+            return api.sendMessage("🌍 Invalid input. Make sure the UID is numeric and text is provided.\nUsage: newworld <uid> | <text>", event.threadID);
+        }
+
+        // Construct API URL
+        const url = `https://betadash-api-swordslush-production.up.railway.app/new-world?userid=${uid}&text=${encodeURIComponent(text)}`;
+        const imagePath = path.join(__dirname, `newworld_${Date.now()}.png`);
+
+        // Notify user
+        api.sendMessage("⏳ Generating New World image, please wait...", event.threadID);
+
+        // Fetch image from API
         const response = await axios({
             url,
             method: "GET",
@@ -45,19 +50,24 @@ module.exports.run = async function({ api, event, args }) {
         response.data.pipe(writer);
 
         writer.on("finish", async () => {
-            await api.sendMessage({
-                attachment: fs.createReadStream(imagePath)
-            }, threadID);
-            fs.unlinkSync(imagePath);
+            try {
+                await api.sendMessage({
+                    attachment: fs.createReadStream(imagePath)
+                }, event.threadID);
+                fs.unlinkSync(imagePath);
+            } catch (sendError) {
+                console.error("Error sending image:", sendError);
+                api.sendMessage("❌ An error occurred while sending the image.", event.threadID);
+            }
         });
 
         writer.on("error", err => {
-            console.error("Write stream error:", err);
-            api.sendMessage("❌ Error saving the image.", threadID);
+            console.error("Stream writer error:", err);
+            api.sendMessage("❌ An error occurred while saving the image.", event.threadID);
         });
 
     } catch (error) {
         console.error("NewWorld Command Error:", error.message);
-        api.sendMessage("❌ Failed to generate New World image.", threadID);
+        api.sendMessage("❌ Failed to generate New World image.", event.threadID);
     }
 };
