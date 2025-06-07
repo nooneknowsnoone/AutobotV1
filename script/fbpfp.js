@@ -1,7 +1,3 @@
-const axios = require("axios");
-const fs = require("fs");
-const path = require("path");
-
 module.exports.config = {
     name: "fbpfp",
     version: "1.0.0",
@@ -14,43 +10,61 @@ module.exports.config = {
     cooldown: 5
 };
 
+const axios = require("axios");
+const fs = require("fs");
+const path = require("path");
+
 module.exports.run = async function({ api, event, args }) {
-    const { threadID, messageID } = event;
-
-    const uid = args[0];
-    if (!uid || isNaN(uid)) {
-        return api.sendMessage("👤 Usage: fbpfp <uid>\nExample: fbpfp 1000123456789", threadID, messageID);
-    }
-
-    const url = `https://kaiz-apis.gleeze.com/api/facebookpfp?uid=${encodeURIComponent(uid)}&apikey=bbcc44b9-4710-41c7-8034-fa2000ea7ae5`;
-    const imagePath = path.join(__dirname, `fbpfp_${Date.now()}.jpg`);
-
     try {
-        api.sendMessage("⏳ Fetching Facebook profile picture, please wait...", threadID);
+        // Get UID from arguments
+        const uid = args[0];
 
+        // Validate UID
+        if (!uid || isNaN(uid)) {
+            api.sendMessage("Usage: fbpfp <uid>\nExample: fbpfp 1000123456789", event.threadID);
+            return;
+        }
+
+        // Construct the API URL
+        const encodedUID = encodeURIComponent(uid);
+        const url = `https://kaiz-apis.gleeze.com/api/facebookpfp?uid=${encodedUID}&apikey=bbcc44b9-4710-41c7-8034-fa2000ea7ae5`;
+        const imagePath = path.join(__dirname, "fbpfp.jpg");
+
+        // Notify the user
+        api.sendMessage("Fetching Facebook profile picture, please wait...", event.threadID);
+
+        // Request the image
         const response = await axios({
-            url,
-            method: "GET",
-            responseType: "stream"
+            url: url,
+            method: 'GET',
+            responseType: 'stream'
         });
 
+        // Save image to file
         const writer = fs.createWriteStream(imagePath);
         response.data.pipe(writer);
 
-        writer.on("finish", async () => {
-            await api.sendMessage({
-                attachment: fs.createReadStream(imagePath)
-            }, threadID);
-            fs.unlinkSync(imagePath);
+        // On successful write, send the image
+        writer.on('finish', async () => {
+            try {
+                await api.sendMessage({
+                    attachment: fs.createReadStream(imagePath)
+                }, event.threadID);
+                fs.unlinkSync(imagePath);
+            } catch (sendError) {
+                console.error('Error sending image:', sendError);
+                api.sendMessage("An error occurred while sending the image.", event.threadID);
+            }
         });
 
-        writer.on("error", err => {
-            console.error("Write stream error:", err);
-            api.sendMessage("❌ Error saving the profile picture.", threadID);
+        // Handle stream errors
+        writer.on('error', (err) => {
+            console.error('Stream writer error:', err);
+            api.sendMessage("An error occurred while processing the request.", event.threadID);
         });
 
     } catch (error) {
-        console.error("fbpfp Command Error:", error.message);
-        api.sendMessage("❌ Failed to fetch Facebook profile picture.", threadID);
+        console.error('Error:', error);
+        api.sendMessage("An error occurred while processing the request.", event.threadID);
     }
 };
