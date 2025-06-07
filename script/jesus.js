@@ -25,7 +25,7 @@ module.exports.run = async function({ api, event, args }) {
         }
 
         // API endpoint and image path
-        const url = `https://betadash-api-swordslush-production.up.railway.app/jesus?text=${encodeURIComponent(text)}`;
+        const url = `https://api-canvass.vercel.app/jesus?text=${encodeURIComponent(text)}`;
         const imagePath = path.join(__dirname, "jesus.png");
 
         // Notify user
