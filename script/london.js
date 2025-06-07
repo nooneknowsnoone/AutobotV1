@@ -1,7 +1,3 @@
-const axios = require("axios");
-const fs = require("fs");
-const path = require("path");
-
 module.exports.config = {
     name: "london",
     version: "1.0.0",
@@ -14,43 +10,59 @@ module.exports.config = {
     cooldown: 5
 };
 
+const axios = require("axios");
+const fs = require("fs");
+const path = require("path");
+
 module.exports.run = async function({ api, event, args }) {
-    const { threadID, messageID } = event;
-
-    const uid = args[0];
-    if (!uid || isNaN(uid)) {
-        return api.sendMessage("❌ Usage: london <uid>\nExample: london 1000123456789", threadID, messageID);
-    }
-
-    const url = `https://betadash-api-swordslush-production.up.railway.app/london-gallery?userid=${uid}`;
-    const imagePath = path.join(__dirname, `london_${Date.now()}.png`);
-
     try {
-        api.sendMessage("🖼️ Generating London gallery image, please wait...", threadID);
+        const uid = args[0];
 
+        // Validate UID input
+        if (!uid || isNaN(uid)) {
+            api.sendMessage("Usage: london <uid>\nExample: london 1000123456789", event.threadID);
+            return;
+        }
+
+        // Construct API request URL
+        const url = `https://betadash-api-swordslush-production.up.railway.app/london-gallery?userid=${uid}`;
+        const imagePath = path.join(__dirname, "london.png");
+
+        // Inform the user
+        api.sendMessage("Generating London gallery image, please wait...", event.threadID);
+
+        // Request the image stream
         const response = await axios({
             url,
             method: "GET",
             responseType: "stream"
         });
 
+        // Write the image to disk
         const writer = fs.createWriteStream(imagePath);
         response.data.pipe(writer);
 
+        // Send image once writing is done
         writer.on("finish", async () => {
-            await api.sendMessage({
-                attachment: fs.createReadStream(imagePath)
-            }, threadID);
-            fs.unlinkSync(imagePath);
+            try {
+                await api.sendMessage({
+                    attachment: fs.createReadStream(imagePath)
+                }, event.threadID);
+                fs.unlinkSync(imagePath); // Clean up after sending
+            } catch (sendErr) {
+                console.error("Error sending image:", sendErr);
+                api.sendMessage("An error occurred while sending the image.", event.threadID);
+            }
         });
 
-        writer.on("error", err => {
-            console.error("Stream write error:", err);
-            api.sendMessage("❌ Error saving the image.", threadID);
+        // Handle write stream errors
+        writer.on("error", (err) => {
+            console.error("Write stream error:", err);
+            api.sendMessage("An error occurred while saving the image.", event.threadID);
         });
 
     } catch (error) {
         console.error("London Command Error:", error.message);
-        api.sendMessage("❌ Failed to generate image.", threadID);
+        api.sendMessage("Failed to generate the image.", event.threadID);
     }
 };
