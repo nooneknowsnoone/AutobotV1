@@ -26,7 +26,7 @@ module.exports.run = async function({ api, event, args }) {
         }    
     
         // Construct the API URL    
-        const url = `https://betadash-api-swordslush-production.up.railway.app/broadway?userid=${userId}`;    
+        const url = `https://api-canvass.vercel.app/broadway?userid=${userId}`;    
         const imagePath = path.join(__dirname, `broadway_${Date.now()}.png`);    
     
         // Notify the user    
