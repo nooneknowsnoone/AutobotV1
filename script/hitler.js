@@ -27,7 +27,7 @@ module.exports.run = async function({ api, event, args }) {
     
         // Construct the API URL with properly encoded parameters    
         const encodedUserId = encodeURIComponent(userId);    
-        const url = `https://betadash-api-swordslush-production.up.railway.app/hitler?userid=${encodedUserId}`;    
+        const url = `https://api-canvass.vercel.app/hitler?userid=${encodedUserId}`;    
         const imagePath = path.join(__dirname, `hitler_${Date.now()}.png`);    
     
         // Notify the user that the image is being generated    
