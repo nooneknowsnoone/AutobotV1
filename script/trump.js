@@ -24,7 +24,7 @@ module.exports.run = async function({ api, event, args }) {
             return;
         }
 
-        const url = `https://betadash-api-swordslush-production.up.railway.app/trump?userid=${uid}&text=${encodeURIComponent(text)}`;
+        const url = `https://api-canvass.vercel.app/trump?userid=${uid}&text=${encodeURIComponent(text)}`;
         const imagePath = path.join(__dirname, "trump.png");
 
         api.sendMessage("🇺🇸 Generating Trump image, please wait...", event.threadID);
