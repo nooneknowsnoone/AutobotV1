@@ -21,7 +21,7 @@ module.exports.run = async function({ api, event, args }) {
     
         // Validate the input    
         if (!userId) {    
-            api.sendMessage("Usage: clown <userid>\nExample: clown 4", event.threadID);    
+            api.sendMessage("Usage: clown <userid>\nExample: clown <uid>", event.threadID);    
             return;    
         }    
     
