@@ -1,8 +1,8 @@
 const axios = require("axios");
-const PH_OFFSET = 8 * 60 * 60 * 1000;
 
 const activeSessions = new Map();
 const lastSentCache = new Map();
+const PH_OFFSET = 8 * 60 * 60 * 1000;
 
 function pad(n) {
   return n < 10 ? "0" + n : n;
@@ -84,24 +84,22 @@ async function fetchWithTimeout(url, options = {}, timeout = 9000) {
 
 module.exports.config = {
   name: "gagstock",
-  version: "1.0",
-  hasPermission: 0,
-  credits: "JEROME",
-  description: "Track Grow A Garden stock and weather.",
-  usage: "gagstock on | gagstock on <keywords> | gagstock off",
-  commandCategory: "Tools",
-  cooldowns: 3,
+  version: "1.0.0",
+  role: 0,
+  hasPrefix: false,
+  aliases: [],
+  description: "Track Grow A Garden stock and restocks",
+  usage: "gagstock on | gagstock on Sunflower | Watering Can | gagstock off",
+  credits: "you",
+  cooldown: 3,
 };
 
 module.exports.run = async function ({ api, event, args }) {
-  const senderId = event.senderID;
+  const threadID = event.threadID;
+  const messageID = event.messageID;
+  const senderId = threadID;
   const action = args[0]?.toLowerCase();
-  const filters = args
-    .slice(1)
-    .join(" ")
-    .split("|")
-    .map(f => f.trim().toLowerCase())
-    .filter(Boolean);
+  const filters = args.slice(1).join(" ").split("|").map((f) => f.trim().toLowerCase()).filter(Boolean);
 
   if (action === "off") {
     const session = activeSessions.get(senderId);
@@ -109,24 +107,21 @@ module.exports.run = async function ({ api, event, args }) {
       clearInterval(session.interval);
       activeSessions.delete(senderId);
       lastSentCache.delete(senderId);
-      return api.sendMessage("🛑 Gagstock tracking stopped.", senderId);
+      return api.sendMessage("🛑 Gagstock tracking stopped.", threadID, messageID);
     } else {
-      return api.sendMessage("⚠️ You don't have an active gagstock session.", senderId);
+      return api.sendMessage("⚠️ You don't have an active gagstock session.", threadID, messageID);
     }
   }
 
   if (action !== "on") {
-    return api.sendMessage(
-      "📌 Usage:\n• gagstock on\n• gagstock on Sunflower | Watering Can\n• gagstock off",
-      senderId
-    );
+    return api.sendMessage("📌 Usage:\n• gagstock on\n• gagstock on Sunflower | Watering Can\n• gagstock off", threadID, messageID);
   }
 
   if (activeSessions.has(senderId)) {
-    return api.sendMessage("📡 You're already tracking Gagstock. Use gagstock off to stop.", senderId);
+    return api.sendMessage("📡 You're already tracking Gagstock. Use gagstock off to stop.", threadID, messageID);
   }
 
-  api.sendMessage("✅ Gagstock tracking started! You'll be notified when stock or weather changes.", senderId);
+  api.sendMessage("✅ Gagstock tracking started! You'll be notified when stock or weather changes.", threadID, messageID);
 
   async function fetchAll() {
     try {
@@ -142,7 +137,7 @@ module.exports.run = async function ({ api, event, args }) {
       } catch {
         const backupRes = await fetchWithTimeout("https://gagstock-2h68.onrender.com/grow-a-garden");
         const backup = backupRes.data.data;
-        const transform = (items) => items?.map(i => ({ name: i.name, emoji: "", value: Number(i.quantity) })) || [];
+        const transform = (items) => items?.map((i) => ({ name: i.name, emoji: "", value: Number(i.quantity) })) || [];
         stockData = {
           gearStock: transform(backup.gear.items),
           seedsStock: transform(backup.seed.items),
@@ -159,7 +154,6 @@ module.exports.run = async function ({ api, event, args }) {
       }
 
       const normalized = normalizeStockData(stockData);
-
       const currentStockOnly = {
         gear: normalized.gearStock,
         seeds: normalized.seedsStock,
@@ -185,8 +179,11 @@ module.exports.run = async function ({ api, event, args }) {
         year: "numeric",
       });
 
-      const formatList = (arr) =>
-        arr.map(i => `- ${i.emoji ? i.emoji + " " : ""}${i.name}: ${formatValue(i.value)}`).join("\n");
+      function formatList(arr) {
+        return arr
+          .map((i) => `- ${i.emoji ? i.emoji + " " : ""}${i.name}: ${formatValue(i.value)}`)
+          .join("\n");
+      }
 
       const weatherDetails =
         `🌤️ 𝗪𝗲𝗮𝘁𝗵𝗲𝗿: ${weather.icon || "🌦️"} ${weather.currentWeather}\n` +
@@ -205,7 +202,7 @@ module.exports.run = async function ({ api, event, args }) {
 
       for (const { label, items, restock } of categories) {
         const filteredItems = filters.length
-          ? items.filter(i => filters.some(f => i.name.toLowerCase().includes(f)))
+          ? items.filter((i) => filters.some((f) => i.name.toLowerCase().includes(f)))
           : items;
         if (filteredItems.length > 0) {
           filteredContent += `${label}:\n${formatList(filteredItems)}\n⏳ Restock in: ${restock}\n\n`;
@@ -215,11 +212,10 @@ module.exports.run = async function ({ api, event, args }) {
       if (!filteredContent.trim()) return;
 
       const message = `🌾 𝗚𝗿𝗼𝘄 𝗔 𝗚𝗮𝗿𝗱𝗲𝗻 — 𝗧𝗿𝗮𝗰𝗸𝗲𝗿\n\n${filteredContent}${weatherDetails}`;
-
-      api.sendMessage(message, senderId);
+      await api.sendMessage(message, threadID);
     } catch (err) {
       if (err.name === "AbortError") {
-        console.warn(`⚠️ Fetch timed out for ${senderId}, retrying on next interval.`);
+        console.warn(`⚠️ Fetch timed out after 9 seconds for sender ${senderId}, retrying on next interval.`);
       } else {
         console.error("❌ Error:", err.message);
       }
@@ -227,6 +223,6 @@ module.exports.run = async function ({ api, event, args }) {
   }
 
   await fetchAll();
-  const interval = setInterval(fetchAll, 10000);
+  const interval = setInterval(fetchAll, 10 * 1000);
   activeSessions.set(senderId, { interval });
 };
