@@ -1,7 +1,8 @@
 const axios = require("axios");
+const PH_OFFSET = 8 * 60 * 60 * 1000;
 
 const activeSessions = new Map();
-const PH_OFFSET = 8 * 60 * 60 * 1000;
+const lastSentCache = new Map();
 
 function pad(n) {
   return n < 10 ? "0" + n : n;
@@ -57,117 +58,175 @@ function formatValue(val) {
   return `x${val}`;
 }
 
+function normalizeStockData(stockData) {
+  const transform = (arr) => arr.map(i => ({ name: i.name, value: i.value }));
+  return {
+    gearStock: transform(stockData.gearStock),
+    seedsStock: transform(stockData.seedsStock),
+    eggStock: transform(stockData.eggStock),
+    honeyStock: transform(stockData.honeyStock),
+    cosmeticsStock: transform(stockData.cosmeticsStock),
+  };
+}
+
+async function fetchWithTimeout(url, options = {}, timeout = 9000) {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
+  try {
+    const response = await axios.get(url, { ...options, signal: controller.signal });
+    clearTimeout(id);
+    return response;
+  } catch (error) {
+    clearTimeout(id);
+    throw error;
+  }
+}
+
+module.exports.config = {
+  name: "gagstock",
+  version: "1.0",
+  hasPermission: 0,
+  credits: "Converted by ChatGPT",
+  description: "Track Grow A Garden stock and weather.",
+  usage: "gagstock on | gagstock on <keywords> | gagstock off",
+  commandCategory: "Tools",
+  cooldowns: 3,
+};
+
 module.exports.run = async function ({ api, event, args }) {
   const senderId = event.senderID;
   const action = args[0]?.toLowerCase();
+  const filters = args
+    .slice(1)
+    .join(" ")
+    .split("|")
+    .map(f => f.trim().toLowerCase())
+    .filter(Boolean);
 
   if (action === "off") {
     const session = activeSessions.get(senderId);
     if (session) {
       clearInterval(session.interval);
       activeSessions.delete(senderId);
-      return api.sendMessage("🛑 Gagstock tracking stopped.", event.threadID, event.messageID);
+      lastSentCache.delete(senderId);
+      return api.sendMessage("🛑 Gagstock tracking stopped.", senderId);
     } else {
-      return api.sendMessage("⚠️ You don't have an active gagstock session.", event.threadID, event.messageID);
+      return api.sendMessage("⚠️ You don't have an active gagstock session.", senderId);
     }
   }
 
   if (action !== "on") {
     return api.sendMessage(
-      "📌 Usage:\n• gagstock on — start tracking\n• gagstock off — stop tracking",
-      event.threadID,
-      event.messageID
+      "📌 Usage:\n• gagstock on\n• gagstock on Sunflower | Watering Can\n• gagstock off",
+      senderId
     );
   }
 
   if (activeSessions.has(senderId)) {
-    return api.sendMessage("📡 You're already tracking Gagstock. Use gagstock off to stop.", event.threadID, event.messageID);
+    return api.sendMessage("📡 You're already tracking Gagstock. Use gagstock off to stop.", senderId);
   }
 
-  api.sendMessage("✅ Gagstock tracking started! You'll be notified when stock or weather changes.", event.threadID);
-
-  const sessionData = {
-    interval: null,
-    lastCombinedKey: null,
-    lastMessage: ""
-  };
+  api.sendMessage("✅ Gagstock tracking started! You'll be notified when stock or weather changes.", senderId);
 
   async function fetchAll() {
     try {
-      const [allStockRes, weatherRes] = await Promise.all([
-        axios.get("http://65.108.103.151:22377/api/stocks?type=all"),
-        axios.get("https://growagardenstock.com/api/stock/weather")
-      ]);
+      let stockData, weather;
 
-      const stockData = allStockRes.data;
-      const weather = weatherRes.data;
+      try {
+        const [stockRes, weatherRes] = await Promise.all([
+          fetchWithTimeout("http://65.108.103.151:22377/api/stocks?type=all"),
+          fetchWithTimeout("https://growagardenstock.com/api/stock/weather"),
+        ]);
+        stockData = stockRes.data.result;
+        weather = weatherRes.data;
+      } catch {
+        const backupRes = await fetchWithTimeout("https://gagstock-2h68.onrender.com/grow-a-garden");
+        const backup = backupRes.data.data;
+        const transform = (items) => items?.map(i => ({ name: i.name, emoji: "", value: Number(i.quantity) })) || [];
+        stockData = {
+          gearStock: transform(backup.gear.items),
+          seedsStock: transform(backup.seed.items),
+          eggStock: transform(backup.egg.items),
+          cosmeticsStock: transform(backup.cosmetics.items),
+          honeyStock: transform(backup.honey.items),
+        };
+        weather = {
+          currentWeather: "Unknown",
+          icon: "🌤️",
+          cropBonuses: "Unknown",
+          updatedAt: backup.updated_at || backup.updatedAt || new Date().toISOString(),
+        };
+      }
 
-      const combinedKey = JSON.stringify({
-        gearStock: stockData.gearStock,
-        seedsStock: stockData.seedsStock,
-        eggStock: stockData.eggStock,
-        honeyStock: stockData.honeyStock,
-        cosmeticsStock: stockData.cosmeticsStock,
-        weatherUpdatedAt: weather.updatedAt,
-        weatherCurrent: weather.currentWeather,
-      });
+      const normalized = normalizeStockData(stockData);
 
-      if (combinedKey === sessionData.lastCombinedKey) return;
-      sessionData.lastCombinedKey = combinedKey;
+      const currentStockOnly = {
+        gear: normalized.gearStock,
+        seeds: normalized.seedsStock,
+        egg: normalized.eggStock,
+        honey: normalized.honeyStock,
+        cosmetics: normalized.cosmeticsStock,
+      };
+
+      const lastSent = lastSentCache.get(senderId);
+      const currentKey = JSON.stringify(currentStockOnly);
+      if (lastSent === currentKey) return;
+
+      lastSentCache.set(senderId, currentKey);
 
       const restocks = getNextRestocks();
+      const updatedAtPH = getPHTime().toLocaleString("en-PH", {
+        hour: "numeric",
+        minute: "numeric",
+        second: "numeric",
+        hour12: true,
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      });
 
-      const formatList = (arr) => (arr?.length
-        ? arr.map(i =>
-            `- ${i.emoji ? i.emoji + " " : ""}${i.name}: ${formatValue(i.value)}`
-          ).join("\n")
-        : "None."
-      );
-
-      const gearList = formatList(stockData.gearStock);
-      const seedList = formatList(stockData.seedsStock);
-      const eggList = formatList(stockData.eggStock);
-      const cosmeticsList = formatList(stockData.cosmeticsStock);
-      const honeyList = formatList(stockData.honeyStock);
+      const formatList = (arr) =>
+        arr.map(i => `- ${i.emoji ? i.emoji + " " : ""}${i.name}: ${formatValue(i.value)}`).join("\n");
 
       const weatherDetails =
         `🌤️ 𝗪𝗲𝗮𝘁𝗵𝗲𝗿: ${weather.icon || "🌦️"} ${weather.currentWeather}\n` +
-        `📖 Description: ${weather.description}\n` +
-        `📌 Effect: ${weather.effectDescription}\n` +
-        `🪄 Crop Bonus: ${weather.cropBonuses}\n` +
-        `📢 Visual Cue: ${weather.visualCue}\n` +
-        `🌟 Rarity: ${weather.rarity}`;
+        `🌾 Crop Bonus: ${weather.cropBonuses}\n` +
+        `📅 Updated at (Philippines): ${updatedAtPH}`;
 
-      const message =
-        `🌾 𝗚𝗿𝗼𝘄 𝗔 𝗚𝗮𝗿𝗱𝗲𝗻 — 𝗧𝗿𝗮𝗰𝗸𝗲𝗿\n\n` +
-        `🛠️ 𝗚𝗲𝗮𝗿:\n${gearList}\n⏳ Restock in: ${restocks.gear}\n\n` +
-        `🌱 𝗦𝗲𝗲𝗱𝘀:\n${seedList}\n⏳ Restock in: ${restocks.seed}\n\n` +
-        `🥚 𝗘𝗴𝗴𝘀:\n${eggList}\n⏳ Restock in: ${restocks.egg}\n\n` +
-        `🎨 𝗖𝗼𝘀𝗺𝗲𝘁𝗶𝗰𝘀:\n${cosmeticsList}\n⏳ Restock in: ${restocks.cosmetics}\n\n` +
-        `🍯 𝗛𝗼𝗻𝗲𝘆:\n${honeyList}\n⏳ Restock in: ${restocks.honey}\n\n` +
-        weatherDetails;
+      const categories = [
+        { label: "🛠️ 𝗚𝗲𝗮𝗿", items: stockData.gearStock, restock: restocks.gear },
+        { label: "🌱 𝗦𝗲𝗲𝗱𝘀", items: stockData.seedsStock, restock: restocks.seed },
+        { label: "🥚 𝗘𝗴𝗴𝘀", items: stockData.eggStock, restock: restocks.egg },
+        { label: "🎨 𝗖𝗼𝘀𝗺𝗲𝘁𝗶𝗰𝘀", items: stockData.cosmeticsStock, restock: restocks.cosmetics },
+        { label: "🍯 𝗛𝗼𝗻𝗲𝘆", items: stockData.honeyStock, restock: restocks.honey },
+      ];
 
-      if (message !== sessionData.lastMessage) {
-        sessionData.lastMessage = message;
-        await api.sendMessage(message, event.threadID);
+      let filteredContent = "";
+
+      for (const { label, items, restock } of categories) {
+        const filteredItems = filters.length
+          ? items.filter(i => filters.some(f => i.name.toLowerCase().includes(f)))
+          : items;
+        if (filteredItems.length > 0) {
+          filteredContent += `${label}:\n${formatList(filteredItems)}\n⏳ Restock in: ${restock}\n\n`;
+        }
       }
 
+      if (!filteredContent.trim()) return;
+
+      const message = `🌾 𝗚𝗿𝗼𝘄 𝗔 𝗚𝗮𝗿𝗱𝗲𝗻 — 𝗧𝗿𝗮𝗰𝗸𝗲𝗿\n\n${filteredContent}${weatherDetails}`;
+
+      api.sendMessage(message, senderId);
     } catch (err) {
-      console.error(`❌ Gagstock error for ${senderId}:`, err.message);
+      if (err.name === "AbortError") {
+        console.warn(`⚠️ Fetch timed out for ${senderId}, retrying on next interval.`);
+      } else {
+        console.error("❌ Error:", err.message);
+      }
     }
   }
 
-  sessionData.interval = setInterval(fetchAll, 10 * 1000);
-  activeSessions.set(senderId, sessionData);
   await fetchAll();
-};
-
-module.exports.config = {
-  name: "gagstock",
-  version: "1.0.0",
-  hasPermission: 0,
-  credits: "Jerome",
-  description: "Track Grow A Garden stock and weather updates.",
-  usage: "gagstock on | gagstock off",
-  cooldown: 5
+  const interval = setInterval(fetchAll, 10000);
+  activeSessions.set(senderId, { interval });
 };
