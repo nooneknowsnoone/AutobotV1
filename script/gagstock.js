@@ -86,7 +86,7 @@ module.exports.config = {
   name: "gagstock",
   version: "1.0",
   hasPermission: 0,
-  credits: "Converted by ChatGPT",
+  credits: "JEROME",
   description: "Track Grow A Garden stock and weather.",
   usage: "gagstock on | gagstock on <keywords> | gagstock off",
   commandCategory: "Tools",
