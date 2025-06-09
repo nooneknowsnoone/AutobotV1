@@ -27,7 +27,7 @@ module.exports.run = async ({ api, event }) => {
   }
 
   const imageUrl = attachment.url;
-  const apiUrl = `https://kaiz-apis.gleeze.com/api/remini?url=${encodeURIComponent(imageUrl)}&stream=true&apikey=bbcc44b9-4710-41c7-8034-fa2000ea7ae5`;
+  const apiUrl = `https://kaiz-apis.gleeze.com/api/upscalev3?url=${encodeURIComponent(imageUrl)}&stream=true&apikey=0c1e7e33-d809-48a6-9e92-d6691a722633`;
 
   try {
     api.sendMessage("⏳ Enhancing image, please wait...", threadID, messageID);
