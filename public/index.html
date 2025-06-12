@@ -1,270 +1,97 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <title>🤖 | Automated Facebook Bot Messenger</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="icon" href="https://i.imgur.com/BNKq0fl.jpeg" type="image/jpeg">
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap">
-  <style>
-    body {
-      padding: 20px;
-      background-color: #f8f9fa;
-      font-family: 'Poppins', sans-serif;
-      transition: background-color 0.3s, color 0.3s;
-    }
-    .dark-mode {
-      background-color: #121212;
-      color: #f0f0f0;
-    }
-    .dark-mode .container {
-      background-color: #1e1e1e;
-      color: #f0f0f0;
-    }
-    .container {
-      background-color: #ffffff;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-      padding: 20px;
-      margin-top: 20px;
-      margin-bottom: 20px;
-    }
-    h1 {
-      color: #343a40;
-    }
-    label {
-      color: #495057;
-    }
-    .centered-textarea {
-      display: block;
-      margin: 0 auto;
-      width: 100%;
-      min-height: 150px;
-      padding: 10px;
-      box-sizing: border-box;
-      border: 1px solid #ced4da;
-      border-radius: 5px;
-      resize: none;
-    }
-    .btn-primary {
-      background-color: #007bff;
-      border: 1px solid #007bff;
-    }
-    .btn-primary:hover {
-      background-color: #0056b3;
-      border: 1px solid #0056b3;
-    }
-    .footer {
-      background-color: rgba(255, 255, 255, 0.7);
-      padding: 10px;
-      text-align: center;
-      font-size: 16px;
-      color: #555;
-      margin-top: 50px;
-      border-top: 1px solid #ccc;
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-    }
-    .footer p {
-      margin: 0;
-      display: inline-block;
-      margin-right: 30px;
-    }
-    .center-placeholder::placeholder {
-      text-align: center;
-    }
-    #inputOfPrefix, #inputOfAdmin {
-      padding: 13px;
-      width: 340px;
-      border: 1px solid blue;
-      border-radius: 8px;
-      color: white;
-      background-color: #343a40;
-    }
-    #json-data {
-      background-image: url('https://i.imgur.com/MY80LCA.gif');
-      background-size: cover;
-      background-repeat: no-repeat;
-      border-color: blue;
-    }
-    .theme-toggle {
-      background: none;
-      border: none;
-      font-size: 22px;
-      margin-left: 10px;
-      cursor: pointer;
-      outline: none;
-      color: #333;
-    }
-    .dark-mode .theme-toggle {
-      color: #f0f0f0;
-    }
-  </style>
-</head>
-<body>
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <a class="navbar-brand" href="#">Home</a>
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse justify-content-end" id="navbarNav" style="margin-right: 70px;">
-      <ul class="navbar-nav">
-        <li class="nav-item active"><a class="nav-link" href="/">Home</a></li>
-        <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown">Features</a>
-          <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-            <a class="dropdown-item" href="#">Cookies Extractor</a>
-            <div class="dropdown-divider"></div>
-            <a class="dropdown-item" href="/step_by_step_guide">Step-by-Step Guide</a>
-          </div>
-        </li>
-        <li class="nav-item"><a class="nav-link" href="online_user">Active</a></li>
-      </ul>
-    </div>
-  </nav>
-
-  <div class="container">
-    <div class="d-flex justify-content-between align-items-center">
-      <h1 style="font-size: 30px;">ENTER APPSTATE</h1>
-      <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark/light">
-        <i class="fas fa-moon" id="themeIcon"></i>
-      </button>
-    </div>
-    <form id="json-form" onsubmit="submitForm(event)">
-      <div class="row">
-        <div class="col-md-12">
-          <textarea id="json-data" class="form-control centered-textarea center-placeholder" placeholder=""></textarea>
-        </div>
-      </div>
-    </form>
-    <p style="margin-top: 10px">Greetings! Begin by entering your cookie.</p>
-  </div>
-
-  <div class="container" id="prefixOfCommands">
-    <h1 style="font-size: 16px; padding: 10px;">Optional: Provide a prefix (e.g. @, #, $, \\, etc.)</h1>
-    <input type="text" id="inputOfPrefix">
-  </div>
-
-  <div class="container" id="adminOfCommands">
-    <h1 style="font-size: 16px; padding: 10px;">Enter your UID (important)</h1>
-    <input type="text" id="inputOfAdmin">
-  </div>
-
-  <label style="font-size: 14px; display: flex; align-items: center; padding: 22px;">
-    <input type="checkbox" id="agreeCheckbox" style="margin-right: 10px;"> I have read and agree to the Terms and Conditions.
-  </label>
-
-  <div class="col text-center">
-    <button class="btn btn-primary" onclick="State()" disabled id="submitButton" style="width: 100%">Deploy</button>
-  </div>
-
-  <div id="result" class="container text-center" style="display: none;"></div>
-
-  <div class="footer">
-    <p>Time: <span id="time"></span></p>
-    <p>Ping: <span id="ping"></span></p>
-  </div>
-
-  <script>
-    document.getElementById('agreeCheckbox').addEventListener('change', function () {
-      document.getElementById('submitButton').disabled = !this.checked;
-    });
-
-    let Commands = [{ 'commands': [] }, { 'handleEvent': [] }];
-
-    function selectAllCommands() {
-      Commands[0].commands = ['all'];
-    }
-
-    function selectAllEvents() {
-      Commands[1].handleEvent = ['all'];
-    }
-
-    function measurePing() {
-      var xhr = new XMLHttpRequest();
-      var startTime, endTime;
-      xhr.onreadystatechange = function () {
-        if (xhr.readyState === 4) {
-          endTime = Date.now();
-          var pingTime = endTime - startTime;
-          document.getElementById("ping").textContent = pingTime + " ms";
-        }
-      };
-      xhr.open("GET", location.href + "?t=" + new Date().getTime());
-      startTime = Date.now();
-      xhr.send();
-    }
-    setInterval(measurePing, 1000);
-
-    function updateTime() {
-      const now = new Date();
-      const options = {
-        timeZone: 'Asia/Manila',
-        hour12: true,
-        hour: 'numeric',
-        minute: 'numeric',
-        second: 'numeric'
-      };
-      const formattedTime = now.toLocaleString('en-US', options);
-      document.getElementById('time').textContent = formattedTime;
-    }
-    updateTime();
-    setInterval(updateTime, 1000);
-
-    async function State() {
-      const jsonInput = document.getElementById('json-data');
-      const button = document.getElementById('submitButton');
-      if (!Commands[0].commands.length) {
-        return alert('Please provide at least one valid command for execution.');
-      }
-      try {
-        button.style.display = 'none';
-        const State = JSON.parse(jsonInput.value);
-        if (State && typeof State === 'object') {
-          const response = await fetch('/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              state: State,
-              commands: Commands,
-              prefix: document.getElementById('inputOfPrefix').value,
-              admin: document.getElementById('inputOfAdmin').value,
-            }),
-          });
-          const data = await response.json();
-          document.getElementById("result").style.display = 'block';
-          document.getElementById("result").innerText = JSON.stringify(data, null, 2);
-        }
-      } catch (error) {
-        alert('Invalid JSON or error occurred!');
-      } finally {
-        button.style.display = 'block';
-      }
-    }
-
-    function toggleTheme() {
-      document.body.classList.toggle('dark-mode');
-      const icon = document.getElementById("themeIcon");
-      if (document.body.classList.contains('dark-mode')) {
-        icon.classList.remove('fa-moon');
-        icon.classList.add('fa-sun');
-      } else {
-        icon.classList.remove('fa-sun');
-        icon.classList.add('fa-moon');
-      }
-    }
-
-    window.onload = function () {
-      selectAllCommands();
-      selectAllEvents();
-    };
-  </script>
-
-  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
-  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-</body>
-</html>
+<!DOCTYPE html>  
+<html lang="en">  
+   <head>  
+      <title>🤖 | Automated Facebook Bot Messenger</title>  
+      <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">  
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">  
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap">  
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">  
+         <link rel="icon" href="https://i.imgur.com/BNKq0fl.jpeg" type="image/jpeg">  
+      <link rel="stylesheet" href="styles.css">  
+   </head>  
+   <body>  
+      <nav class="navbar navbar-expand-lg navbar-dark bg-dark">  
+         <a class="navbar-brand" href="#">Home </a>  
+         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">  
+         <span class="navbar-toggler-icon"></span>  
+         </button>  
+         <div class="collapse navbar-collapse justify-content-end" id="navbarNav" style="margin-right: 70px;">  
+            <ul class="navbar-nav">  
+               <li class="nav-item active">  
+                  <a class="nav-link" href="/">Home <span class="sr-only">(current)</span>  
+                  </a>  
+               </li>  
+               <li class="nav-item dropdown">  
+                  <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"> Features </a>  
+                  <div class="dropdown-menu" aria-labelledby="navbarDropdown">  
+                     <a class="dropdown-item" href="#">Cookies Extractor</a>  
+                     <div class="dropdown-divider"></div>  
+                     <a class="dropdown-item" href="/step_by_step_guide">Step-by-Step Guide</a>  
+                  </div>  
+               </li>  
+               <li class="nav-item">  
+                  <a class="nav-link" href="online_user">Active</a>  
+               </li>  
+            </ul>  
+         </div>  
+      </nav>  
+      <div class="container">  
+         <h1 class="col text-center" style="font-size: 30px; padding: 10px;">ENTER APPSTATE</h1>  
+         <form id="json-form" onsubmit="submitForm(event)">  
+            <div class="row">  
+               <div class="col-md-12">  
+                  <textarea id="json-data" class="form-control centered-textarea center-placeholder" placeholder=""></textarea>  
+               </div>  
+            </div>  
+         </form>  
+         <p style=" margin-top: 10px">Greetings! Begin by entering your cookie. Scroll down to carefully review our Terms and Privacy.</p>  
+      </div>  
+      <div class="container">  
+         <h1 class="col text-center" style="font-size: 20px; padding: 10px;">Terms and Conditions and Privacy Policy</h1>  
+         <p>Chatbot Service Guidelines:  
+ * Persistent Connection: Your chatbot stays active post-login, unless you change the password.</p>  
+ <p>* Cookie Security: Never share your cookie; it's vital for your account's security.</p>  
+<p> * Strong Passwords: Use unique, robust passwords.  
+ * Avoid Direct Bot Access: Doing so may disrupt service.</p>  
+<p> * Troubleshooting: If the bot is unresponsive, return to the website. If problems persist, change the account.</p>  
+ <p>* Dummy Accounts: Use disposable accounts for added security.</p>  
+ <p>* No Malicious Use: Malicious activity will result in termination and potential legal action.</p>  
+<p> * Disclaimers: We are not responsible for unauthorized access, account locking, or hosting platform actions.<p>  
+ </p>* Terms of Service: Adhere to hosting platform terms.</p>  
+         <div class="container" id="listOfCommands">  
+            <h1 style="font-size: 16px; padding: 10px;">Please choose your commands by tapping on the respective options.</h1>  
+            <button class="btn btn-primary" onclick="selectAllCommands()">Select all commands</button>  
+         </div>  
+         <div class="container" id="listOfCommandsEvent">  
+            <h1 style="font-size: 16px; padding: 10px;">Please choose your event commands by tapping on the respective options.</h1>  
+            <button class="btn btn-primary" onclick="selectAllEvents()">Select all events</button>  
+         </div>  
+         <div class="container" id="prefixOfCommands">  
+            <h1 style="font-size: 16px; padding: 10px;">Please provide a prefix (optional ex: @ # $ \ - etc.). If you choose not to, entering 'automatically non-prefix</h1>  
+            <input type="text" id="inputOfPrefix">  
+         </div>  
+         <div class="container" id="adminOfCommands">  
+            <h1 style="font-size: 16px; padding: 10px;">Please provide an uid (important).</h1>  
+            <input type="text" id="inputOfAdmin">  
+         </div>  
+         <label style="font-size: 14px; display: flex; align-items: center; padding: 22px;">  
+         <input type="checkbox" id="agreeCheckbox" style="margin-right: 10px;"> Checking this box certifies that I have read, understood, and agreed to the Terms and Conditions. </label>  
+         <div class="col text-center">  
+            <button class="btn btn-primary" onclick="State()" disabled id="submitButton" style="width: 100%">Submit</button>  
+         </div>  
+      </div>  
+      <div id="result" class="container text-center" style="display: none;"></div>  
+      <div class="footer">  
+         <p>Time: <span id="time"></span>  
+         </p>  
+         <p>Ping: <span id="ping"></span>  
+         </p>  
+      </div>  
+      <script src="script.js"></script>  
+      <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>  
+      <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>  
+      <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>  
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>  
+   </body>  
+</html>  
+  
