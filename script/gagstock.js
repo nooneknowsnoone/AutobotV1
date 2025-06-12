@@ -2,17 +2,10 @@ const axios = require("axios");
 
 const activeSessions = new Map();
 const lastSentCache = new Map();
-const PH_OFFSET = 8 * 60 * 60 * 1000;
+const PH_TIMEZONE = "Asia/Manila";
 
-function pad(n) {
-  return n < 10 ? "0" + n : n;
-}
-
-function getPHTime() {
-  const now = new Date();
-  return new Date(now.getTime() + now.getTimezoneOffset() * 60000 + PH_OFFSET);
-}
-
+function pad(n) { return n < 10 ? "0" + n : n; }
+function getPHTime() { return new Date(new Date().toLocaleString("en-US", { timeZone: PH_TIMEZONE })); }
 function getCountdown(target) {
   const now = getPHTime();
   const msLeft = target - now;
@@ -22,11 +15,8 @@ function getCountdown(target) {
   const s = Math.floor((msLeft % 6e4) / 1000);
   return `${pad(h)}h ${pad(m)}m ${pad(s)}s`;
 }
-
 function getNextRestocks() {
-  const now = getPHTime();
-  const timers = {};
-
+  const now = getPHTime(), timers = {};
   const nextEgg = new Date(now);
   nextEgg.setMinutes(now.getMinutes() < 30 ? 30 : 0);
   if (now.getMinutes() >= 30) nextEgg.setHours(now.getHours() + 1);
@@ -51,34 +41,50 @@ function getNextRestocks() {
 
   return timers;
 }
-
+function getNextScheduledTime(startTime = getPHTime()) {
+  const base = new Date(startTime);
+  const min = base.getMinutes();
+  const next5 = Math.floor(min / 5) * 5 + 5;
+  base.setMinutes(next5, 30, 0);
+  if (base <= startTime) base.setMinutes(base.getMinutes() + 5);
+  return base;
+}
 function formatValue(val) {
   if (val >= 1_000_000) return `x${(val / 1_000_000).toFixed(1)}M`;
   if (val >= 1_000) return `x${(val / 1_000).toFixed(1)}K`;
   return `x${val}`;
 }
-
+function addEmoji(name) {
+  const emojis = {
+    "Common Egg": "🥚", "Uncommon Egg": "🐣", "Rare Egg": "🍳", "Legendary Egg": "🪺",
+    "Mythical Egg": "🥚", "Bug Egg": "🪲", "Watering Can": "🚿", "Trowel": "🛠️",
+    "Recall Wrench": "🔧", "Basic Sprinkler": "💧", "Advanced Sprinkler": "💦",
+    "Godly Sprinkler": "⛲", "Lightning Rod": "⚡", "Master Sprinkler": "🌊",
+    "Favorite Tool": "❤️", "Harvest Tool": "🌾", "Carrot": "🥕", "Strawberry": "🍓",
+    // ... other symbols ...
+  };
+  return `${emojis[name] || ""} ${name}`;
+}
 function normalizeStockData(stockData) {
-  const transform = (arr) => arr.map(i => ({ name: i.name, value: i.value }));
+  const t = arr => arr.map(i => ({ name: i.name, value: i.value }));
   return {
-    gearStock: transform(stockData.gearStock),
-    seedsStock: transform(stockData.seedsStock),
-    eggStock: transform(stockData.eggStock),
-    honeyStock: transform(stockData.honeyStock),
-    cosmeticsStock: transform(stockData.cosmeticsStock),
+    gearStock: t(stockData.gearStock),
+    seedsStock: t(stockData.seedsStock),
+    eggStock: t(stockData.eggStock),
+    honeyStock: t(stockData.honeyStock),
+    cosmeticsStock: t(stockData.cosmeticsStock),
   };
 }
-
-async function fetchWithTimeout(url, options = {}, timeout = 9000) {
+async function fetchWithTimeout(url, timeout = 5000) {
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeout);
   try {
-    const response = await axios.get(url, { ...options, signal: controller.signal });
+    const res = await axios.get(url, { signal: controller.signal });
     clearTimeout(id);
-    return response;
-  } catch (error) {
+    return res;
+  } catch (e) {
     clearTimeout(id);
-    throw error;
+    throw e;
   }
 }
 
@@ -86,143 +92,134 @@ module.exports.config = {
   name: "gagstock",
   version: "1.0.0",
   role: 0,
-  hasPrefix: false,
+  hasPrefix: true,
   aliases: [],
-  description: "Track Grow A Garden stock and restocks",
+  description: "Track Grow A Garden stock including cosmetics and restocks.",
   usage: "gagstock on | gagstock on Sunflower | Watering Can | gagstock off",
-  credits: "you",
+  credits: "You",
   cooldown: 3,
 };
 
 module.exports.run = async function ({ api, event, args }) {
-  const threadID = event.threadID;
-  const messageID = event.messageID;
-  const senderId = threadID;
+  const { threadID, messageID, senderID } = event;
   const action = args[0]?.toLowerCase();
-  const filters = args.slice(1).join(" ").split("|").map((f) => f.trim().toLowerCase()).filter(Boolean);
+  const filters = args.slice(1).join(" ").split("|").map(f => f.trim().toLowerCase()).filter(Boolean);
+
+  const sendText = (txt) => api.sendMessage(txt, threadID, messageID);
 
   if (action === "off") {
-    const session = activeSessions.get(senderId);
+    const session = activeSessions.get(senderID);
     if (session) {
-      clearInterval(session.interval);
-      activeSessions.delete(senderId);
-      lastSentCache.delete(senderId);
-      return api.sendMessage("🛑 Gagstock tracking stopped.", threadID, messageID);
-    } else {
-      return api.sendMessage("⚠️ You don't have an active gagstock session.", threadID, messageID);
+      clearTimeout(session.timeout);
+      activeSessions.delete(senderID);
+      lastSentCache.delete(senderID);
+      return sendText("🛑 Gagstock tracking stopped.");
     }
+    return sendText("⚠️ You don't have an active gagstock session.");
   }
 
   if (action !== "on") {
-    return api.sendMessage("📌 Usage:\n• gagstock on\n• gagstock on Sunflower | Watering Can\n• gagstock off", threadID, messageID);
+    return sendText(
+      "📌 Usage:\n• gagstock on\n• gagstock on Sunflower | Watering Can\n• gagstock off"
+    );
   }
 
-  if (activeSessions.has(senderId)) {
-    return api.sendMessage("📡 You're already tracking Gagstock. Use gagstock off to stop.", threadID, messageID);
+  if (activeSessions.has(senderID)) {
+    return sendText("📡 You're already tracking Gagstock. Use gagstock off to stop.");
   }
 
-  api.sendMessage("✅ Gagstock tracking started! You'll be notified when stock or weather changes.", threadID, messageID);
+  await sendText("✅ Gagstock tracking started! You'll be notified when stock or weather changes.");
 
-  async function fetchAll() {
+  async function fetchAndNotify(alwaysSend = false) {
     try {
-      let stockData, weather;
+      const [stockRes, weatherRes] = await Promise.all([
+        fetchWithTimeout("https://gagstock.gleeze.com/grow-a-garden"),
+        fetchWithTimeout("https://growagardenstock.com/api/stock/weather"),
+      ]);
 
-      try {
-        const [stockRes, weatherRes] = await Promise.all([
-          fetchWithTimeout("http://65.108.103.151:22377/api/stocks?type=all"),
-          fetchWithTimeout("https://growagardenstock.com/api/stock/weather"),
-        ]);
-        stockData = stockRes.data.result;
-        weather = weatherRes.data;
-      } catch {
-        const backupRes = await fetchWithTimeout("https://gagstock-2h68.onrender.com/grow-a-garden");
-        const backup = backupRes.data.data;
-        const transform = (items) => items?.map((i) => ({ name: i.name, emoji: "", value: Number(i.quantity) })) || [];
-        stockData = {
-          gearStock: transform(backup.gear.items),
-          seedsStock: transform(backup.seed.items),
-          eggStock: transform(backup.egg.items),
-          cosmeticsStock: transform(backup.cosmetics.items),
-          honeyStock: transform(backup.honey.items),
-        };
-        weather = {
-          currentWeather: "Unknown",
-          icon: "🌤️",
-          cropBonuses: "Unknown",
-          updatedAt: backup.updated_at || backup.updatedAt || new Date().toISOString(),
-        };
-      }
-
-      const normalized = normalizeStockData(stockData);
-      const currentStockOnly = {
-        gear: normalized.gearStock,
-        seeds: normalized.seedsStock,
-        egg: normalized.eggStock,
-        honey: normalized.honeyStock,
-        cosmetics: normalized.cosmeticsStock,
+      const backup = stockRes.data.data;
+      const stockData = {
+        gearStock: backup.gear.items.map(i => ({ name: i.name, value: Number(i.quantity) })),
+        seedsStock: backup.seed.items.map(i => ({ name: i.name, value: Number(i.quantity) })),
+        eggStock: backup.egg.items.map(i => ({ name: i.name, value: Number(i.quantity) })),
+        cosmeticsStock: backup.cosmetics.items.map(i => ({ name: i.name, value: Number(i.quantity) })),
+        honeyStock: backup.honey.items.map(i => ({ name: i.name, value: Number(i.quantity) })),
       };
 
-      const lastSent = lastSentCache.get(senderId);
-      const currentKey = JSON.stringify(currentStockOnly);
-      if (lastSent === currentKey) return;
-
-      lastSentCache.set(senderId, currentKey);
+      const weather = {
+        currentWeather: weatherRes.data.currentWeather || "Unknown",
+        icon: weatherRes.data.icon || "🌤️",
+        cropBonuses: weatherRes.data.cropBonuses || "None",
+      };
 
       const restocks = getNextRestocks();
+      const formatList = arr => arr.map(i => `- ${addEmoji(i.name)}: ${formatValue(i.value)}`).join("\n");
       const updatedAtPH = getPHTime().toLocaleString("en-PH", {
-        hour: "numeric",
-        minute: "numeric",
-        second: "numeric",
-        hour12: true,
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
+        hour: "numeric", minute: "numeric", second: "numeric",
+        hour12: true, day: "2-digit", month: "short", year: "numeric"
       });
 
-      function formatList(arr) {
-        return arr
-          .map((i) => `- ${i.emoji ? i.emoji + " " : ""}${i.name}: ${formatValue(i.value)}`)
-          .join("\n");
-      }
-
-      const weatherDetails =
-        `🌤️ 𝗪𝗲𝗮𝘁𝗵𝗲𝗿: ${weather.icon || "🌦️"} ${weather.currentWeather}\n` +
-        `🌾 Crop Bonus: ${weather.cropBonuses}\n` +
-        `📅 Updated at (Philippines): ${updatedAtPH}`;
-
-      const categories = [
-        { label: "🛠️ 𝗚𝗲𝗮𝗿", items: stockData.gearStock, restock: restocks.gear },
-        { label: "🌱 𝗦𝗲𝗲𝗱𝘀", items: stockData.seedsStock, restock: restocks.seed },
-        { label: "🥚 𝗘𝗴𝗴𝘀", items: stockData.eggStock, restock: restocks.egg },
-        { label: "🎨 𝗖𝗼𝘀𝗺𝗲𝘁𝗶𝗰𝘀", items: stockData.cosmeticsStock, restock: restocks.cosmetics },
-        { label: "🍯 𝗛𝗼𝗻𝗲𝘆", items: stockData.honeyStock, restock: restocks.honey },
-      ];
-
       let filteredContent = "";
+      let matched = 0;
 
-      for (const { label, items, restock } of categories) {
-        const filteredItems = filters.length
-          ? items.filter((i) => filters.some((f) => i.name.toLowerCase().includes(f)))
+      function addSection(label, items, restock) {
+        const filtered = filters.length
+          ? items.filter(i => filters.some(f => i.name.toLowerCase().includes(f)))
           : items;
-        if (filteredItems.length > 0) {
-          filteredContent += `${label}:\n${formatList(filteredItems)}\n⏳ Restock in: ${restock}\n\n`;
+
+        if ((label === "🛠️ 𝗚𝗲𝗮𝗿" || label === "🌱 𝗦𝗲𝗲𝗱𝘀") && filtered.length > 0) {
+          matched += filtered.length;
+          filteredContent += `${label}:\n${formatList(filtered)}\n⏳ Restock In: ${restock}\n\n`;
+        } else if (!filters.length || label !== "🛠️ 𝗚𝗲𝗮𝗿" && label !== "🌱 𝗦𝗲𝗲𝗱𝘀") {
+          filteredContent += `${label}:\n${formatList(items)}\n⏳ Restock In: ${restock}\n\n`;
         }
       }
 
-      if (!filteredContent.trim()) return;
+      addSection("🛠️ 𝗚𝗲𝗮𝗿", stockData.gearStock, restocks.gear);
+      addSection("🌱 𝗦𝗲𝗲𝗱𝘀", stockData.seedsStock, restocks.seed);
+      addSection("🥚 𝗘𝗴𝗴𝘀", stockData.eggStock, restocks.egg);
+      addSection("🎨 𝗖𝗼𝘀𝗺𝗲𝘁𝗶𝗰𝘀", stockData.cosmeticsStock, restocks.cosmetics);
+      addSection("🍯 𝗛𝗼𝗻𝗲𝘆", stockData.honeyStock, restocks.honey);
 
-      const message = `🌾 𝗚𝗿𝗼𝘄 𝗔 𝗚𝗮𝗿𝗱𝗲𝗻 — 𝗧𝗿𝗮𝗰𝗸𝗲𝗿\n\n${filteredContent}${weatherDetails}`;
-      await api.sendMessage(message, threadID);
-    } catch (err) {
-      if (err.name === "AbortError") {
-        console.warn(`⚠️ Fetch timed out after 9 seconds for sender ${senderId}, retrying on next interval.`);
-      } else {
-        console.error("❌ Error:", err.message);
-      }
+      const currentKey = JSON.stringify({
+        gearStock: stockData.gearStock,
+        seedsStock: stockData.seedsStock
+      });
+      const lastSent = lastSentCache.get(senderID);
+      if (!alwaysSend && lastSent === currentKey) return false;
+      lastSentCache.set(senderID, currentKey);
+      if (matched === 0) return false;
+
+      const msg = `🌾 𝗚𝗿𝗼𝘄 𝗔 𝗚𝗮𝗿𝗱𝗲𝗻 — 𝗧𝗿𝗮𝗰𝗸𝗲𝗿\n\n${filteredContent}` +
+                  `🌤️ 𝗪𝗲𝗮𝘁𝗵𝗲𝗿: ${weather.icon} ${weather.currentWeather}\n` +
+                  `🌾 Crop Bonus: ${weather.cropBonuses}\n` +
+                  `📅 Updated at (Philippines): ${updatedAtPH}`;
+
+      await sendText(msg);
+      return true;
+    } catch {
+      return false;
     }
   }
 
-  await fetchAll();
-  const interval = setInterval(fetchAll, 10 * 1000);
-  activeSessions.set(senderId, { interval });
+  async function runSchedule() {
+    const now = getPHTime();
+    const nextTime = getNextScheduledTime(now);
+    const wait = Math.max(nextTime - now, 1000);
+
+    const timer = setTimeout(async function trigger() {
+      const updated = await fetchAndNotify(false);
+      if (updated) {
+        runSchedule();
+      } else {
+        const retryTimer = setTimeout(trigger, 5000);
+        activeSessions.set(senderID, { timeout: retryTimer });
+      }
+    }, wait);
+
+    activeSessions.set(senderID, { timeout: timer });
+  }
+
+  await fetchAndNotify(true);
+  runSchedule();
 };
