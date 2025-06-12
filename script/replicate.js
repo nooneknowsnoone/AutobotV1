@@ -7,7 +7,7 @@ module.exports.config = {
   description: "Generates an AI image using the FLUX Replicate model.",
   hasPrefix: false,
   cooldown: 5,
-  aliases: ["flux"],
+  aliases: ["fflux"],
 };
 
 module.exports.run = async function ({ api, event, args }) {
