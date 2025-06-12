@@ -1,78 +1,94 @@
+const axios = require('axios');
+const fs = require('fs-extra');
 const path = require('path');
+
+const SEARCH_URL = 'https://kaiz-apis.gleeze.com/api/spotify-search';
+const DOWNLOAD_URL = 'https://kaiz-apis.gleeze.com/api/spotify-down';
+const API_KEY = '8aa2f0a0-cbb9-40b8-a7d8-bba320cb9b10';
+
 module.exports.config = {
   name: "spotify",
   version: "1.0.0",
   role: 0,
   hasPrefix: true,
-  aliases: ["spot"],
-  usage: "spotify <song name>",
-  description: "Search and download Spotify track.",
-  credits: "developer",
+  aliases: ['spsearch', 'splay'],
+  usage: 'spotify [song name]',
+  description: 'Search and download Spotify track',
+  credits: 'developer',
   cooldown: 5
 };
 
-module.exports.run = async function({ api, event, args }) {
-  const fs = require("fs-extra");
-  const axios = require("axios");
-
-  const songName = args.join(' ');
-  if (!songName) {
-    api.sendMessage(`❌ 𝗣𝗹𝗲𝗮𝘀𝗲 𝗽𝗿𝗼𝘃𝗶𝗱𝗲 𝘁𝗶𝘁𝗹𝗲.`, event.threadID, event.messageID);
-    return;
+module.exports.run = async function ({ api, event, args }) {
+  const query = args.join(' ');
+  if (!query) {
+    return api.sendMessage(`❗ Please provide the title of the Spotify track.`, event.threadID, event.messageID);
   }
 
+  api.sendMessage(`🔍 Searching Spotify for "${query}"...`, event.threadID, event.messageID);
+
   try {
-    api.sendMessage(`🔍 Searching for "${songName}"...`, event.threadID, event.messageID);
+    // Search Spotify
+    const searchRes = await axios.get(SEARCH_URL, {
+      params: {
+        q: query,
+        apikey: API_KEY
+      }
+    });
 
-    const searchURL = `https://kaiz-apis.gleeze.com/api/spotify-search?q=${encodeURIComponent(songName)}&apikey=bbcc44b9-4710-41c7-8034-fa2000ea7ae5`;
-    const searchRes = await axios.get(searchURL);
-    const track = searchRes.data[0];
-
+    const track = searchRes.data?.[0];
     if (!track || !track.trackUrl) {
-      return api.sendMessage("❌ No track found.", event.threadID, event.messageID);
+      return api.sendMessage(`❌ No track found.`, event.threadID, event.messageID);
     }
 
-    const downloadURL = `https://kaiz-apis.gleeze.com/api/spotify-down?url=${encodeURIComponent(track.trackUrl)}&apikey=8aa2f0a0-cbb9-40b8-a7d8-bba320cb9b10`;
-    const dlRes = await axios.get(downloadURL, { responseType: 'stream' });
-    const { headers } = dlRes;
-    const contentType = headers['content-type'];
-    const contentLength = parseInt(headers['content-length'], 10);
-    const isAudio = contentType && contentType.startsWith('audio');
+    // Download track
+    const dlRes = await axios.get(DOWNLOAD_URL, {
+      params: {
+        url: track.trackUrl,
+        apikey: API_KEY
+      }
+    });
 
-    if (!isAudio || !contentLength) {
-      return api.sendMessage("❌ Failed to retrieve audio file.", event.threadID, event.messageID);
-    }
+    const { title, url, artist, thumbnail } = dlRes.data;
 
-    const time = new Date();
-    const timestamp = time.toISOString().replace(/[:.]/g, "-");
-    const filePath = path.join(__dirname, 'cache', `${timestamp}_spotify.mp3`);
+    // Send info as image template
+    await api.sendMessage({
+      attachment: await global.utils.getStreamFromURL(thumbnail),
+      body: `🎵 Title: ${title}\n👤 Artist: ${artist}`
+    }, event.threadID);
 
+    // Download MP3 file
+    const fileName = `${Date.now()}_spotify.mp3`;
+    const filePath = path.join(__dirname, 'cache', fileName);
     const writer = fs.createWriteStream(filePath);
-    dlRes.data.pipe(writer);
 
-    writer.on("finish", () => {
-      if (fs.statSync(filePath).size > 26214400) { // 25MB limit
+    const audioStream = await axios({
+      method: 'GET',
+      url,
+      responseType: 'stream'
+    });
+
+    audioStream.data.pipe(writer);
+
+    writer.on('finish', () => {
+      const fileSize = fs.statSync(filePath).size;
+      if (fileSize > 25 * 1024 * 1024) {
         fs.unlinkSync(filePath);
-        return api.sendMessage('❌ The file could not be sent because it is larger than 25MB.', event.threadID);
+        return api.sendMessage(`⚠️ The file is too large to send (over 25MB).`, event.threadID, event.messageID);
       }
 
-      const message = {
-        body: `🎵 ${dlRes.data.title || track.title || 'Spotify Track'}`,
+      api.sendMessage({
+        body: `✅ Here's your Spotify track: ${title} by ${artist}`,
         attachment: fs.createReadStream(filePath)
-      };
-
-      api.sendMessage(message, event.threadID, () => {
-        fs.unlinkSync(filePath);
-      }, event.messageID);
+      }, event.threadID, () => fs.unlinkSync(filePath), event.messageID);
     });
 
-    writer.on("error", (err) => {
-      console.error("File Write Error:", err);
-      api.sendMessage("❌ Error saving the audio file.", event.threadID, event.messageID);
+    writer.on('error', (err) => {
+      console.error('File write error:', err);
+      api.sendMessage(`❌ Failed to download the track.`, event.threadID, event.messageID);
     });
 
-  } catch (error) {
-    console.error("Spotify Error:", error);
-    api.sendMessage('❌ An error occurred while processing your request.', event.threadID, event.messageID);
+  } catch (err) {
+    console.error('Spotify error:', err.message);
+    api.sendMessage(`❌ An error occurred while processing your request.`, event.threadID, event.messageID);
   }
 };
