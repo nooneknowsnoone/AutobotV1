@@ -37,7 +37,7 @@ module.exports.run = async function({
       api.sendMessage(helpMessage, event.threadID, event.messageID);
     } else if (!isNaN(input)) {
       const page = parseInt(input);
-      const pages = 20;
+      const pages = 50;
       let start = (page - 1) * pages;
       let end = start + pages;
       let helpMessage = `📃 Command List:\n\n`;
