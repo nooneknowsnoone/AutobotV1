@@ -20,7 +20,7 @@ module.exports.config = {
   aliases: ["listusers", "listbots", "activeusers", "list-users", "bot-users", "active-users", "active-bots", "list-bot", "botstatus"],
   description: 'List all active bots in the history session.',
   version: '1.4.0',
-  role: 2,
+  role: 5,
   cooldown: 0,
   credits: "DEVELOPER",
   hasPrefix: false,
