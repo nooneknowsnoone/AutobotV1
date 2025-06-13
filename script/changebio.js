@@ -6,7 +6,7 @@ module.exports.config = {
   aliases: [],
   description: "Change the bot's bio text.",
   usage: "changebio <new bio>",
-  credits: "Converted by you | Original by Arn",
+  credits: "Arn",
   cooldown: 5,
 };
 
