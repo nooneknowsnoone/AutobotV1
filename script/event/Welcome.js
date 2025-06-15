@@ -22,19 +22,19 @@ module.exports.handleEvent = async function ({ api, event }) {
         const groupInfo = await api.getThreadInfo(event.threadID);
         const groupName = groupInfo.threadName || "this group";
 
-        const imageUrl = "https://i.imgur.com/7oPQNZg.gif";
-        const filePath = path.join(__dirname, "cache", "welcome.gif");
+        const imgURL = 'https://i.imgur.com/7oPQNZg.gif';
+        const filePath = path.join(__dirname, 'cache', 'welcome.gif');
 
         try {
-            const response = await axios.get(imageUrl, { responseType: 'arraybuffer' });
-            fs.writeFileSync(filePath, Buffer.from(response.data, 'binary'));
+            const response = await axios.get(imgURL, { responseType: 'arraybuffer' });
+            fs.writeFileSync(filePath, Buffer.from(response.data));
 
             api.sendMessage({
                 body: `👋 Welcome ${name} to ${groupName}! 🎉`,
                 attachment: fs.createReadStream(filePath)
             }, event.threadID, () => fs.unlinkSync(filePath));
         } catch (error) {
-            console.error("❌ Error fetching static welcome image:", error);
+            console.error("❌ Error sending static welcome image:", error);
             api.sendMessage({
                 body: `👋 Welcome ${name} to ${groupName}!`
             }, event.threadID);
