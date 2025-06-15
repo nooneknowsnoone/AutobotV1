@@ -1,75 +1,95 @@
-const axios = require('axios');
+const axios = require("axios");
 
 module.exports.config = {
-  name: 'tempmail',
-  version: '1.0.0',
+  name: "tempmail",
+  version: "1.0.0",
   role: 0,
-  hasPrefix: false,
+  hasPrefix: true,
   aliases: [],
-  description: 'Generate a temporary email and check inbox.',
-  usage: 'tempmail gen | tempmail inbox <email>',
-  credits: 'Ry',
-  cooldown: 5,
+  description: "Generate or check temporary emails using XVI TempMail API.",
+  usage: "tempmail gen or tempmail inbox <email>",
+  credits: "Ry",
+  cooldown: 3,
 };
 
 module.exports.run = async function ({ api, event, args }) {
-  const input = args.join(" ").trim().split("|").map(s => s.trim());
-  const subcommand = input[0]?.toLowerCase();
+  const threadID = event.threadID;
+  const messageID = event.messageID;
+
+  const subcommand = args[0];
 
   if (!subcommand || (subcommand !== "gen" && subcommand !== "inbox")) {
     return api.sendMessage(
-      `❌ Invalid subcommand.\n\n📌 Usage:\n• tempmail gen\n• tempmail inbox <email>`,
-      event.threadID,
-      event.messageID
+      "❗ Usage:\n• tempmail gen — Generate a temporary email\n• tempmail inbox <email> — Check inbox for given email",
+      threadID,
+      messageID
     );
   }
 
   if (subcommand === "gen") {
-    api.sendMessage("🔄 Generating tempmail address...", event.threadID, async (err, info) => {
-      try {
-        const res = await axios.get('https://xvi-rest-api.vercel.app/api/tempmail-create');
-        const data = res.data;
+    try {
+      const { data } = await axios.get("https://xvi-rest-api.vercel.app/api/tempmail-create");
 
-        if (!data.success) {
-          return api.editMessage("❌ Failed to generate tempmail.", info.messageID);
-        }
-
-        return api.editMessage(
-          `✅ Email Generated:\n📧 ${data.email}\n\n📨 Check inbox tempmail inbox ${data.email} `,
-          info.messageID
+      if (!data || !data.email) {
+        return api.sendMessage(
+          "❌ Failed to generate temporary email.",
+          threadID,
+          messageID
         );
-      } catch (error) {
-        console.error("tempmail gen error:", error.message);
-        return api.editMessage("❌ Error: Couldn't generate tempmail.", info.messageID);
       }
-    });
+
+      return api.sendMessage(
+        `✅ TempMail Generated:\n📧 Email: ${data.email}\n\n📥 Check Inbox:\ntempmail inbox ${data.email}`,
+        threadID,
+        messageID
+      );
+    } catch (err) {
+      console.error("tempmail gen error:", err.message);
+      return api.sendMessage(
+        "❌ Could not connect to the TempMail API.",
+        threadID,
+        messageID
+      );
+    }
   }
 
   if (subcommand === "inbox") {
-    const email = input[1];
+    const email = args[1];
 
     if (!email) {
-      return api.sendMessage("❌ Please provide an email.\nUsage: tempmail inbox <email>", event.threadID, event.messageID);
+      return api.sendMessage(
+        "❗ Please provide the email address.\nExample: tempmail inbox your@email.com",
+        threadID,
+        messageID
+      );
     }
 
-    api.sendMessage("🔍 Fetching inbox messages...", event.threadID, async (err, info) => {
-      try {
-        const encodedEmail = encodeURIComponent(email);
-        const res = await axios.get(`https://xvi-rest-api.vercel.app/api/tempmail-inbox?email=${encodedEmail}`);
-        const data = res.data;
+    try {
+      const encodedEmail = encodeURIComponent(email);
+      const { data } = await axios.get(`https://xvi-rest-api.vercel.app/api/tempmail-inbox?email=${encodedEmail}`);
 
-        if (!data.from || !data.subject || !data.chunks) {
-          return api.editMessage("📭 No new emails found or invalid response.", info.messageID);
-        }
-
-        return api.editMessage(
-          `📬 New Email Found:\n\n🔹 From: ${data.from}\n🔹 Subject: ${data.subject}\n🔹 Date: ${data.date}`,
-          info.messageID
+      if (!data || !data.from || !data.subject || !data.chunks || !Array.isArray(data.chunks)) {
+        return api.sendMessage(
+          `📭 Inbox for ${email} is empty or invalid.`,
+          threadID,
+          messageID
         );
-      } catch (error) {
-        console.error("tempmail inbox error:", error.message);
-        return api.editMessage("❌ Error: Failed to fetch inbox messages.", info.messageID);
       }
-    });
+
+      const fullContent = data.chunks.join("\n");
+
+      return api.sendMessage(
+        `📨 Message for ${email}:\n\n🔹 From: ${data.from}\n🔹 Subject: ${data.subject}\n🔹 Date: ${data.date}\n\n📝 Content:\n${fullContent}`,
+        threadID,
+        messageID
+      );
+    } catch (err) {
+      console.error("tempmail inbox error:", err.message);
+      return api.sendMessage(
+        "❌ Failed to retrieve inbox content.",
+        threadID,
+        messageID
+      );
+    }
   }
 };
