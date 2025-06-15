@@ -6,31 +6,29 @@ module.exports.config = {
   role: 0,
   hasPrefix: false,
   aliases: ['gpt', 'gimage'],
-  description: "Analyze question or  Vision",
-  usage: "gemini [question] or reply to an image",
-  credits: 'Developer',
+  description: "Analyze question or Vision",
+  usage: "ai [question] or reply to an image",
+  credits: 'Ryy',
   cooldown: 3,
 };
 
 module.exports.run = async function({ api, event, args }) {
-  const senderId = event.senderID;
-  const threadId = event.threadID;
-  const messageId = event.messageID;
-
-  const userPrompt = args.join(' ').trim();
-  const repliedMessage = event.messageReply?.body || '';
-  const finalPrompt = `${repliedMessage} ${userPrompt}`.trim();
+  const promptText = args.join(" ").trim();
+  const userReply = event.messageReply?.body || '';
+  const finalPrompt = `${userReply} ${promptText}`.trim();
+  const senderID = event.senderID;
+  const threadID = event.threadID;
+  const messageID = event.messageID;
 
   if (!finalPrompt && !event.messageReply?.attachments?.[0]?.url) {
-    return api.sendMessage("❌ Provide a question or reply to an image.", threadId, messageId);
+    return api.sendMessage("❌ Please provide a prompt or reply to an image.", threadID, messageID);
   }
 
-  api.sendMessage("⏳ Processing your request...", threadId, async (err, info) => {
+  api.sendMessage('🤖 𝗔𝗜 𝗜𝗦 𝗣𝗥𝗢𝗖𝗘𝗦𝗦𝗜𝗡𝗚 𝗬𝗢𝗨𝗥 𝗥𝗘𝗤𝗨𝗘𝗦𝗧...', threadID, async (err, info) => {
     if (err) return;
 
     try {
       let imageUrl = "";
-
       if (event.messageReply?.attachments?.[0]?.type === 'photo') {
         imageUrl = event.messageReply.attachments[0].url;
       }
@@ -42,16 +40,21 @@ module.exports.run = async function({ api, event, args }) {
         }
       });
 
-      const result = data.description || "No response returned.";
-      const response = `${result}`;
+      const responseText = data.description || "❌ No response received from AI.";
 
-      api.editMessage(response, info.messageID);
+      // Optional: Get user's name
+      api.getUserInfo(senderID, (err, infoUser) => {
+        const userName = infoUser?.[senderID]?.name || "Unknown User";
+        const timePH = new Date().toLocaleString('en-US', { timeZone: 'Asia/Manila' });
+        const replyMessage = `🤖 𝗚𝗘𝗠𝗜𝗡𝗜 𝗔𝗜\n━━━━━━━━━━━━━━━━━━\n${responseText}\n━━━━━━━━━━━━━━━━━━\n🗣 𝗔𝘀𝗸𝗲𝗱 𝗕𝘆: ${userName}\n⏰ 𝗧𝗶𝗺𝗲: ${timePH}`;
+
+        api.editMessage(replyMessage, info.messageID);
+      });
+
     } catch (error) {
-      console.error("Gemini command error:", error);
-      api.editMessage(
-        "❌ Error: " + (error.response?.data?.message || error.message || "Something went wrong."),
-        info.messageID
-      );
+      console.error("AI Error:", error);
+      const errMsg = "❌ Error: " + (error.response?.data?.message || error.message || "Unknown error occurred.");
+      api.editMessage(errMsg, info.messageID);
     }
   });
 };
