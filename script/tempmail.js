@@ -79,7 +79,7 @@ module.exports.run = async function ({ api, event, args }) {
       const fullContent = data.chunks.join("\n");
 
       return api.sendMessage(
-        `📨 Message for ${email}:\n\n🔹 From: ${data.from}\n🔹 Subject: ${data.subject}\n🔹 Date: ${data.date}\n\n📝 Content:\n${fullContent}`,
+        `📨 Message for ${email}:\n\n🔹 From: ${data.from}\n🔹 Subject: ${data.subject}\n🔹 Date: ${data.date}`,
         threadID,
         messageID
       );
