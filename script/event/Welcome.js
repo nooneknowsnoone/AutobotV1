@@ -1,5 +1,6 @@
 const axios = require('axios');
 const fs = require('fs');
+const path = require('path');
 
 module.exports.config = {
     name: "welcome",
@@ -19,31 +20,21 @@ module.exports.handleEvent = async function ({ api, event }) {
         }
 
         const groupInfo = await api.getThreadInfo(event.threadID);
-        const groupIcon = groupInfo.imageSrc || "https://i.ibb.co/G5mJZxs/rin.jpg";
-        const memberCount = groupInfo.participantIDs.length;
         const groupName = groupInfo.threadName || "this group";
-        const background = groupInfo.imageSrc || "https://i.ibb.co/FkQMsQgG/494820034-1290485175939968-835018671615168300-n-jpg-nc-cat-103-ccb-1-7-nc-sid-fc17b8-nc-ohc-gtlt82-D.jpg";
 
-        const apiKey = "8062a9eb-2a2e-458b-a1f0-4cd25de8b000";
-        const welcomeUrl = `https://kaiz-apis.gleeze.com/api/welcome` +
-            `?username=${encodeURIComponent(name)}` +
-            `&avatarUrl=https://i.ibb.co/DffbY7gs/494577064-1064141835095954-3209322904365365771-n-jpg-nc-cat-107-ccb-1-7-nc-sid-fc17b8-nc-ohc-QSjow-V.jpg` +
-            `&groupname=${encodeURIComponent(groupName)}` +
-            `&bg=${encodeURIComponent(background)}` +
-            `&memberCount=${memberCount}` +
-            `&apikey=${apiKey}`;
+        const imageUrl = "https://i.imgur.com/7oPQNZg.gif";
+        const filePath = path.join(__dirname, "cache", "welcome.gif");
 
         try {
-            const { data } = await axios.get(welcomeUrl, { responseType: 'arraybuffer' });
-            const filePath = './script/cache/welcome_image.jpg';
-            fs.writeFileSync(filePath, Buffer.from(data));
+            const response = await axios.get(imageUrl, { responseType: 'arraybuffer' });
+            fs.writeFileSync(filePath, Buffer.from(response.data, 'binary'));
 
             api.sendMessage({
                 body: `👋 Welcome ${name} to ${groupName}! 🎉`,
                 attachment: fs.createReadStream(filePath)
             }, event.threadID, () => fs.unlinkSync(filePath));
         } catch (error) {
-            console.error("❌ Error fetching welcome image:", error);
+            console.error("❌ Error fetching static welcome image:", error);
             api.sendMessage({
                 body: `👋 Welcome ${name} to ${groupName}!`
             }, event.threadID);
