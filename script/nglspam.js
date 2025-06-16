@@ -31,7 +31,7 @@ module.exports.run = async function({ api, event, args }) {
     if (err) return;
 
     try {
-      const apiUrl = `https://mademoiselle-rest-apis.onrender.com/api/nglspam?username=${encodeURIComponent(username)}&amount=${encodeURIComponent(amount)}&message=${encodeURIComponent(message)}`;
+      const apiUrl = `https://mademoiselle-rrest-apis.onrender.com/api/nglspam?username=${encodeURIComponent(username)}&amount=${encodeURIComponent(amount)}&message=${encodeURIComponent(message)}`;
       const { data } = await axios.get(apiUrl);
 
       if (data.error) {
