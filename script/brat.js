@@ -22,7 +22,7 @@ module.exports.run = async function({ api, event, args }) {
         }
 
         const encodedText = encodeURIComponent(text);
-        const apiUrl = `https://api.zetsu.xyz/gen/brat?text=${encodedText}&apikey=80836f3451c2b3392b832988e7b73cdb`;
+        const apiUrl = `https://jonell01-ccprojectsapihshs.hf.space/api/brat?text=${encodedText}`;
         const imagePath = path.join(__dirname, "brat.png");
 
         api.sendMessage("✨ Generating Bratz-style image, please wait...", event.threadID);
