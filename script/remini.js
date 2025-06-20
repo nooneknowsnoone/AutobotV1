@@ -18,7 +18,7 @@ module.exports.run = async ({ api, event }) => {
 
   // Check if the user replied to an image
   if (!messageReply || !messageReply.attachments || messageReply.attachments.length === 0) {
-    return api.sendMessage("❌ Please reply to an image.", threadID, messageID);
+    return api.sendMessage("❌ Please reply to an image to enhance.", threadID, messageID);
   }
 
   const attachment = messageReply.attachments[0];
@@ -27,16 +27,23 @@ module.exports.run = async ({ api, event }) => {
   }
 
   const imageUrl = attachment.url;
-  const apiUrl = `https://kaiz-apis.gleeze.com/api/upscalev3?url=${encodeURIComponent(imageUrl)}&stream=true&apikey=0c1e7e33-d809-48a6-9e92-d6691a722633`;
+  const apiUrl = `https://api.ferdev.my.id/tools/remini?link=${encodeURIComponent(imageUrl)}`;
 
   try {
     api.sendMessage("⏳ Enhancing image, please wait...", threadID, messageID);
 
-    const response = await axios.get(apiUrl, { responseType: "arraybuffer" });
+    const res = await axios.get(apiUrl);
 
-    // Ensure cache directory exists
+    if (!res.data.success || !res.data.data) {
+      return api.sendMessage(`❌ Failed to enhance image. Reason: ${res.data.message || 'Unknown error.'}`, threadID, messageID);
+    }
+
+    const enhancedUrl = res.data.data;
+
+    // Download enhanced image as buffer
+    const imageResponse = await axios.get(enhancedUrl, { responseType: 'arraybuffer' });
     fs.ensureDirSync(path.dirname(tempPath));
-    fs.writeFileSync(tempPath, Buffer.from(response.data, "binary"));
+    fs.writeFileSync(tempPath, Buffer.from(imageResponse.data, "binary"));
 
     api.sendMessage({
       body: "✅ Image enhanced!",
@@ -45,6 +52,6 @@ module.exports.run = async ({ api, event }) => {
 
   } catch (err) {
     console.error("Remini Error:", err.message);
-    api.sendMessage("❌ Error occurred while enhancing the image.", threadID, messageID);
+    api.sendMessage("❌ An error occurred while enhancing the image.", threadID, messageID);
   }
 };
