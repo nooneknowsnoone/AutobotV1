@@ -35,15 +35,17 @@ module.exports.run = async function({ api, event, args }) {
         imageUrl = event.messageReply.attachments[0].url;
       }
 
-      const { data } = await axios.get("https://apis-rho-nine.vercel.app/gemini", {
+      const { data } = await axios.get("https://kaiz-apis.gleeze.com/api/gemini-flash-2.0", {
         params: {
-          ask: finalPrompt,
-          imagurl: imageUrl
+          q: finalPrompt,
+          uid: senderId,
+          imageUrl,
+          apikey: "8aa2f0a0-cbb9-40b8-a7d8-bba320cb9b10"
         }
       });
 
-      const result = data.description || "No response returned.";
-      const response = `🧠 Gemini Vision\n─────────────\n${result}\n─────────────`;
+      const result = data.response || "No response returned.";
+      const response = `🧠 Gemini Vision\n━━━━━━━━━━━━━━━\n${result}\n━━━━━━━━━━━━━━━`;
 
       api.editMessage(response, info.messageID);
     } catch (error) {
