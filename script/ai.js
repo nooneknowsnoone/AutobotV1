@@ -33,16 +33,17 @@ module.exports.run = async function({ api, event, args }) {
         imageUrl = event.messageReply.attachments[0].url;
       }
 
-      const { data } = await axios.get("https://apis-rho-nine.vercel.app/gemini", {
+      const { data } = await axios.get("https://kaiz-apis.gleeze.com/api/gpt-4.1", {
         params: {
           ask: finalPrompt,
-          imagurl: imageUrl
+          uid: senderID,
+          imageUrl,
+          apikey: "bbcc44b9-4710-41c7-8034-fa2000ea7ae5"
         }
       });
 
-      const responseText = data.description || "❌ No response received from AI.";
+      const responseText = data.response || "❌ No response received from AI.";
 
-      // Optional: Get user's name
       api.getUserInfo(senderID, (err, infoUser) => {
         const userName = infoUser?.[senderID]?.name || "Unknown User";
         const timePH = new Date().toLocaleString('en-US', { timeZone: 'Asia/Manila' });
