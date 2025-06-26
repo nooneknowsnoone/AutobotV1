@@ -26,7 +26,7 @@ module.exports.run = async function ({ api, event, args }) {
   const keyword = encodeURIComponent(args.join(" "));
   const searchURL = `https://kaiz-apis.gleeze.com/api/spotify-search?q=${keyword}&apikey=8aa2f0a0-cbb9-40b8-a7d8-bba320cb9b10`;
 
-  await api.sendMessage("🎶 Searching and preparing your Spotify track...", threadID, messageID);
+  await api.sendMessage("Traacking song please wait...", threadID, messageID);
 
   try {
     const searchRes = await axios.get(searchURL);
