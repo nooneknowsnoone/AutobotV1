@@ -2,62 +2,72 @@ const axios = require("axios");
 const fs = require("fs");
 const path = require("path");
 
-module.exports = {
-    name: "spotify",
-    usePrefix: false,
-    usage: "spotify [song name]",
-    description: "Search and download Spotify track.",
-    version: "1.0",
-    cooldown: 5,
+module.exports.config = {
+  name: "spotify",
+  version: "1.0.0",
+  role: 0,
+  hasPrefix: false,
+  aliases: [],
+  description: "Search and download Spotify track.",
+  usage: "spotify [song name]",
+  credits: "Ryy",
+  cooldown: 5,
+};
 
-    async execute({ api, event, args }) {
-        if (!args[0]) {
-            return api.sendMessage("Please provide a search keyword.\nUsage: spotify [song name]", event.threadID, event.messageID);
-        }
+module.exports.run = async function ({ api, event, args }) {
+  const threadID = event.threadID;
+  const messageID = event.messageID;
+  const senderID = event.senderID;
 
-        const keyword = encodeURIComponent(args.join(" "));
-        const searchURL = `https://kaiz-apis.gleeze.com/api/spotify-search?q=${keyword}&apikey=8aa2f0a0-cbb9-40b8-a7d8-bba320cb9b10`;
+  if (!args[0]) {
+    return api.sendMessage("❌ Please provide a search keyword.\n\nUsage: spotify [song name]", threadID, messageID);
+  }
 
-        try {
-            const searchRes = await axios.get(searchURL);
-            const track = searchRes.data[0]; // Get the first result
+  const keyword = encodeURIComponent(args.join(" "));
+  const searchURL = `https://kaiz-apis.gleeze.com/api/spotify-search?q=${keyword}&apikey=8aa2f0a0-cbb9-40b8-a7d8-bba320cb9b10`;
 
-            if (!track || !track.trackUrl) {
-                return api.sendMessage("No track found.", event.threadID, event.messageID);
-            }
+  await api.sendMessage("🎶 Searching and preparing your Spotify track...", threadID, messageID);
 
-            const downloadURL = `https://kaiz-apis.gleeze.com/api/spotify-down?url=${encodeURIComponent(track.trackUrl)}&apikey=8aa2f0a0-cbb9-40b8-a7d8-bba320cb9b10`;
-            const dlRes = await axios.get(downloadURL);
-            const { title, url, artist, thumbnail } = dlRes.data;
+  try {
+    const searchRes = await axios.get(searchURL);
+    const track = searchRes.data[0]; // First result
 
-            // Download thumbnail
-            const imgPath = path.join(__dirname, "cache", `thumb_${event.senderID}.jpg`);
-            const audioPath = path.join(__dirname, "cache", `audio_${event.senderID}.mp3`);
-            const imgRes = await axios.get(thumbnail, { responseType: "arraybuffer" });
-            fs.writeFileSync(imgPath, imgRes.data);
-
-            // Download audio
-            const audioRes = await axios.get(url, { responseType: "arraybuffer" });
-            fs.writeFileSync(audioPath, audioRes.data);
-
-            // Send thumbnail and caption
-            api.sendMessage({
-                body: `🎵 Title: ${title}\n👤 Artist: ${artist}`,
-                attachment: fs.createReadStream(imgPath)
-            }, event.threadID, () => {
-                // Send audio after image
-                api.sendMessage({
-                    body: "🎧 Here’s your Spotify track!",
-                    attachment: fs.createReadStream(audioPath)
-                }, event.threadID, () => {
-                    fs.unlinkSync(imgPath);
-                    fs.unlinkSync(audioPath);
-                });
-            });
-
-        } catch (err) {
-            console.error("Spotify Error:", err);
-            api.sendMessage("An error occurred while processing your request.", event.threadID, event.messageID);
-        }
+    if (!track || !track.trackUrl) {
+      return api.sendMessage("❌ No Spotify track found.", threadID, messageID);
     }
+
+    const downloadURL = `https://kaiz-apis.gleeze.com/api/spotify-down?url=${encodeURIComponent(track.trackUrl)}&apikey=8aa2f0a0-cbb9-40b8-a7d8-bba320cb9b10`;
+    const dlRes = await axios.get(downloadURL);
+    const { title, url, artist, thumbnail } = dlRes.data;
+
+    const imgPath = path.join(__dirname, "cache", `thumb_${senderID}.jpg`);
+    const audioPath = path.join(__dirname, "cache", `audio_${senderID}.mp3`);
+
+    // Download thumbnail
+    const imgRes = await axios.get(thumbnail, { responseType: "arraybuffer" });
+    fs.writeFileSync(imgPath, imgRes.data);
+
+    // Download audio
+    const audioRes = await axios.get(url, { responseType: "arraybuffer" });
+    fs.writeFileSync(audioPath, audioRes.data);
+
+    // Send image with details
+    api.sendMessage({
+      body: `🎵 Title: ${title}\n👤 Artist: ${artist}`,
+      attachment: fs.createReadStream(imgPath)
+    }, threadID, () => {
+      // Then send the audio
+      api.sendMessage({
+        body: "🎧 Here’s your Spotify track!",
+        attachment: fs.createReadStream(audioPath)
+      }, threadID, () => {
+        fs.unlinkSync(imgPath);
+        fs.unlinkSync(audioPath);
+      });
+    });
+
+  } catch (error) {
+    console.error("Spotify command error:", error);
+    return api.sendMessage("❌ An error occurred while processing your request.", threadID, messageID);
+  }
 };
