@@ -12,7 +12,7 @@ module.exports.config = {
   cooldown: 3,
 };
 
-module.exports.run = async function({ api, event, args }) {
+module.exports.run = async function ({ api, event, args }) {
   const promptText = args.join(" ").trim();
   const userReply = event.messageReply?.body || '';
   const finalPrompt = `${userReply} ${promptText}`.trim();
@@ -33,12 +33,12 @@ module.exports.run = async function({ api, event, args }) {
         imageUrl = event.messageReply.attachments[0].url;
       }
 
-      const { data } = await axios.get("https://kaiz-apis.gleeze.com/api/gpt-4.1", {
+      const { data } = await axios.get("https://kaiz-apis.gleeze.com/api/gpt-4o-pro", {
         params: {
           ask: finalPrompt,
           uid: senderID,
           imageUrl,
-          apikey: "bbcc44b9-4710-41c7-8034-fa2000ea7ae5"
+          apikey: "8aa2f0a0-cbb9-40b8-a7d8-bba320cb9b10"
         }
       });
 
