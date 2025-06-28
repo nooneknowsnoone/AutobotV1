@@ -4,7 +4,7 @@ const cron = require('node-cron');
 let isSending = false;
 
 module.exports.config = {
-  name: "catfact",
+  name: "catfacts",
   version: "1.0.0",
   credits: "Ry",
 };
