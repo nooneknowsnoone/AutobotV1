@@ -1,5 +1,5 @@
 module.exports.config = {
-  name: "autodl",
+  name: "autodownload",
   eventType: ["message"],
   version: "1.0.0",
   credits: "Ry",
