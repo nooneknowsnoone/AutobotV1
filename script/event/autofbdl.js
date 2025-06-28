@@ -1,96 +1,117 @@
 module.exports.config = {
-  name: "autofbdl",
+  name: "autodl",
   eventType: ["message"],
   version: "1.0.0",
-  credits: "libyzxy0",
-  description: "Automatically downloads Facebook videos from messages.",
+  credits: "Ry",
+  description: "Auto download from TikTok, YouTube, Facebook, IG, X, etc.",
   cooldowns: 5
 };
 
 module.exports.handleEvent = async function ({ api, event }) {
+  const fs = require("fs");
+  const axios = require("axios");
 
-  const fs = require('fs');
-  const axios = require('axios');
-  const path = require('path');
+  const API_BASE = "https://kaiz-apis.gleeze.com/api";
+  const API_KEY = "8aa2f0a0-cbb9-40b8-a7d8-bba320cb9b10";
 
-  const regEx_facebook = /https:\/\/www\.facebook\.com\/\S+/;
-  const link = event.body;
+  const input = event.body;
+  if (!input) return;
 
-  if (regEx_facebook.test(link)) {
+  const platforms = {
+    "x.com": "/twitter-xdl",
+    "twitter.com": "/twitter-xdl",
+    "pin.it": "/pinte-dl",
+    "capcut.com": "/capcutdl",
+    "youtube.com": "/ytdl",
+    "youtu.be": "/ytdl",
+    "reddit.com": "/reddit-dl",
+    "snapchat.com": "/snapchat-dl",
+    "facebook.com": "/fbdl",
+    "fb.watch": "/fbdl",
+    "tiktok.com": "/tiktok-dl",
+    "vt.tiktok.com": "/tiktok-dl",
+    "vm.tiktok.com": "/tiktok-dl",
+    "instagram.com": "/insta-dl"
+  };
 
-    api.setMessageReaction("⏳", event.messageID, () => {}, true);
-    api.sendTypingIndicator(event.threadID, true);
+  const matched = Object.keys(platforms).find(key => input.includes(key));
+  if (!matched) return;
 
-    const url = `https://betadash-api-swordslush-production.up.railway.app/fbdl?url=${encodeURIComponent(link)}`;
+  const endpoint = `${API_BASE}${platforms[matched]}?url=${encodeURIComponent(input)}&apikey=${API_KEY}`;
 
-    axios.head(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0',
-        'Content-Type': 'application/json'
-      }
-    }).then(headRes => {
-      const fileSize = parseInt(headRes.headers['content-length'], 10);
+  api.setMessageReaction("⏳", event.messageID, () => {}, true);
+  api.sendTypingIndicator(event.threadID, true);
 
-      if (fileSize > 25 * 1024 * 1024) {
-        return api.sendMessage({
-          body: "⚠️ The video is larger than 25MB and cannot be sent directly.\n\nClick the button below to watch it.",
-          attachment: null,
-          buttons: [
-            {
-              type: "web_url",
-              url: url,
-              title: "Watch Video"
-            }
-          ]
-        }, event.threadID, event.messageID);
-      }
+  axios.get(endpoint).then(async res => {
+    let videoUrl;
 
-      api.sendMessage("Downloading Facebook video...", event.threadID, (err, info) =>
+    switch (platforms[matched]) {
+      case "/twitter-xdl":
+        videoUrl = res.data.downloadLinks?.[0]?.link;
+        break;
+      case "/pinte-dl":
+        videoUrl = res.data.video?.url;
+        break;
+      case "/capcutdl":
+        videoUrl = res.data.url;
+        break;
+      case "/ytdl":
+        videoUrl = res.data.download_url;
+        break;
+      case "/reddit-dl":
+        videoUrl = res.data.mp4?.find(v => v.quality === "350p")?.url || res.data.mp4?.[0]?.url;
+        break;
+      case "/snapchat-dl":
+        videoUrl = res.data.url;
+        break;
+      case "/fbdl":
+        videoUrl = res.data.videoUrl;
+        break;
+      case "/tiktok-dl":
+        videoUrl = res.data.url;
+        break;
+      case "/insta-dl":
+        videoUrl = res.data.result?.video_url;
+        break;
+    }
 
-        setTimeout(() => {
-          api.unsendMessage(info.messageID);
-        }, 10000), event.messageID
-      );
+    if (!videoUrl) {
+      return api.sendMessage("❌ Failed to retrieve video URL.", event.threadID, event.messageID);
+    }
 
-      axios({
-        method: 'GET',
-        url: url,
-        responseType: 'stream'
-      }).then(async streamRes => {
-
-        const fileName = `${Date.now()}.mp4`;
-        const filePath = path.join(__dirname, fileName);
-        const videoFile = fs.createWriteStream(filePath);
-
-        streamRes.data.pipe(videoFile);
-
-        videoFile.on('finish', () => {
-          videoFile.close(() => {
-
-            setTimeout(() => {
-              api.setMessageReaction("✅", event.messageID, () => {}, true);
-              api.sendMessage({
-                body: `✅ Successfully downloaded Facebook video!`,
-                attachment: fs.createReadStream(filePath)
-              }, event.threadID, () => {
-                fs.unlinkSync(filePath); // delete video after sending
-              });
-            }, 5000);
-
-          });
-        });
-
-        videoFile.on('error', () => {
-          api.sendMessage("❌ Error while saving the video. Please try again later.", event.threadID, event.messageID);
-        });
-
-      }).catch(err => {
-        api.sendMessage(`❌ Error while fetching video stream.\n${err.message}`, event.threadID, event.messageID);
-      });
-
-    }).catch(err => {
-      api.sendMessage(`❌ Failed to fetch video info.\n${err.message}`, event.threadID, event.messageID);
+    api.sendMessage("Downloading video...", event.threadID, (err, info) => {
+      setTimeout(() => api.unsendMessage(info.messageID), 10000);
     });
 
-  }
+    const fileName = `${Date.now()}.mp4`;
+    const filePath = __dirname + "/" + fileName;
+
+    const videoStream = await axios({
+      method: "GET",
+      url: videoUrl,
+      responseType: "stream"
+    }).then(res => res.data);
+
+    const file = fs.createWriteStream(filePath);
+    videoStream.pipe(file);
+
+    file.on("finish", () => {
+      file.close(() => {
+        setTimeout(() => {
+          api.setMessageReaction("✅", event.messageID, () => {}, true);
+          api.sendMessage({
+            body: `✅ Video downloaded successfully from ${matched}`,
+            attachment: fs.createReadStream(filePath)
+          }, event.threadID, () => fs.unlinkSync(filePath));
+        }, 5000);
+      });
+    });
+
+    file.on("error", () => {
+      api.sendMessage("❌ Error saving video.", event.threadID, event.messageID);
+    });
+
+  }).catch(err => {
+    api.sendMessage(`❌ Download error: ${err.message}`, event.threadID, event.messageID);
+  });
 };
