@@ -1,76 +1,61 @@
-const axios = require("axios");
-const fs = require("fs");
-const path = require("path");
+const axios = require('axios');
+const path = require('path');
+const fs = require('fs-extra');
 
 module.exports.config = {
-  name: "ytvideo",
-  version: "1.0.0",
-  role: 0,
-  hasPrefix: false,
-  aliases: [],
-  description: "Search and download YouTube video.",
-  usage: "ytvideo [video name]",
-  credits: "developer",
-  cooldown: 5,
+    name: "ytvideo",
+    version: "1.0.0",
+    role: 0,
+    description: "Search and download YouTube video by keyword.",
+    prefix: false,
+    premium: false,
+    credits: "Ry",
+    cooldowns: 10,
+    category: "media"
 };
 
 module.exports.run = async function ({ api, event, args }) {
-  const threadID = event.threadID;
-  const messageID = event.messageID;
-  const senderID = event.senderID;
-
-  if (!args[0]) {
-    return api.sendMessage("❌ Please provide a video name.\n\nUsage: ytvideo [video name]", threadID, messageID);
-  }
-
-  const SEARCH_API_KEY = "0c1e7e33-d809-48a6-9e92-d6691a722633";
-  const DOWNLOAD_API_KEY = "86397083-298d-4b97-a76e-414c1208beae";
-
-  const keyword = encodeURIComponent(args.join(" "));
-  const searchURL = `https://kaiz-apis.gleeze.com/api/ytsearch?q=${keyword}&apikey=${SEARCH_API_KEY}`;
-
-  await api.sendMessage("🔎 Searching YouTube, please wait...", threadID, messageID);
-
-  try {
-    const searchRes = await axios.get(searchURL);
-    const video = searchRes.data?.items?.[0];
-
-    if (!video || !video.url) {
-      return api.sendMessage("❌ No YouTube video found.", threadID, messageID);
+    if (!args[0]) {
+        return api.sendMessage('❗ Please enter a YouTube keyword to search.', event.threadID, event.messageID);
     }
 
-    const downloadURL = `https://kaiz-apis.gleeze.com/api/ytdl?url=${encodeURIComponent(video.url)}&apikey=${DOWNLOAD_API_KEY}`;
-    const dlRes = await axios.get(downloadURL);
-    const { title, download_url, author, duration, thumbnail } = dlRes.data;
+    const query = encodeURIComponent(args.join(' '));
+    const url = `https://kaiz-apis.gleeze.com/api/video?query=${query}&apikey=bbcc44b9-4710-41c7-8034-fa2000ea7ae5`;
 
-    if (!download_url) {
-      return api.sendMessage("⚠️ Unable to get a downloadable link.", threadID, messageID);
+    try {
+        api.sendMessage("🔎 Searching YouTube video, please wait...", event.threadID, event.messageID);
+
+        const { data } = await axios.get(url);
+
+        if (!data || !data.download_url) {
+            return api.sendMessage('❌ No video found. Try a different keyword.', event.threadID, event.messageID);
+        }
+
+        const fileName = `${event.messageID}.mp4`;
+        const filePath = path.join(__dirname, fileName);
+
+        const download = await axios({
+            method: 'GET',
+            url: data.download_url,
+            responseType: 'stream',
+        });
+
+        const writer = fs.createWriteStream(filePath);
+        download.data.pipe(writer);
+
+        writer.on('finish', () => {
+            api.sendMessage({
+                body: `🎬 Title: ${data.title}\n👤 Author: ${data.author}\n⏱ Duration: ${data.duration}`,
+                attachment: fs.createReadStream(filePath)
+            }, event.threadID, () => fs.unlinkSync(filePath), event.messageID);
+        });
+
+        writer.on('error', () => {
+            api.sendMessage('🚫 Error downloading video. Try again.', event.threadID, event.messageID);
+        });
+
+    } catch (err) {
+        console.error('YouTube video search error:', err);
+        return api.sendMessage('⚠️ Failed to fetch YouTube video. Try again later.', event.threadID, event.messageID);
     }
-
-    const thumbPath = path.join(__dirname, "cache", `thumb_${senderID}.jpg`);
-    const videoPath = path.join(__dirname, "cache", `video_${senderID}.mp4`);
-
-    const thumbRes = await axios.get(thumbnail, { responseType: "arraybuffer" });
-    fs.writeFileSync(thumbPath, thumbRes.data);
-
-    const videoRes = await axios.get(download_url, { responseType: "arraybuffer" });
-    fs.writeFileSync(videoPath, videoRes.data);
-
-    api.sendMessage({
-      body: `🎬 Title: ${title}\n👤 Author: ${author}\n⏱ Duration: ${duration || "N/A"}`,
-      attachment: fs.createReadStream(thumbPath)
-    }, threadID, () => {
-      api.sendMessage({
-        body: "📽️ Here's your YouTube video!",
-        attachment: fs.createReadStream(videoPath)
-      }, threadID, () => {
-        fs.unlinkSync(thumbPath);
-        fs.unlinkSync(videoPath);
-      });
-    });
-
-  } catch (error) {
-    console.error("YouTube command error:", error);
-    return api.sendMessage("❌ An error occurred while processing the video.", threadID, messageID);
-  }
 };
