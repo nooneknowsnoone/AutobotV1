@@ -23,7 +23,7 @@ module.exports.handleEvent = async function ({ api, event }) {
     const groupName = threadInfo.threadName || "this group";
     const memberCount = threadInfo.participantIDs.length;
 
-    const avatarUrl = `https://graph.facebook.com/${leftID}/picture?width=512&height=512`;
+    const avatarUrl = `https://i.imgur.com/rCPBLSe.jpeg`;
     const background = threadInfo.imageSrc || "https://i.ibb.co/4YBNyvP/images-76.jpg";
 
     // Build Ace goodbye API URL
