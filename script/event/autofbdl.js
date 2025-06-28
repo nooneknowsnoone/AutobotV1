@@ -107,11 +107,4 @@ module.exports.handleEvent = async function ({ api, event }) {
       });
     });
 
-    file.on("error", () => {
-      api.sendMessage("❌ Error saving video.", event.threadID, event.messageID);
-    });
-
-  }).catch(err => {
-    api.sendMessage(`❌ Download error: ${err.message}`, event.threadID, event.messageID);
-  });
-};
+    
