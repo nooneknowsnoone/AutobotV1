@@ -1,10 +1,10 @@
 module.exports.config = {
-  name: "autodownload",
+  name: "autodl",
   eventType: ["message"],
   version: "1.0.0",
   credits: "Ry",
   description: "Auto download from TikTok, YouTube, Facebook, IG, X, etc.",
-  cooldowns: 1
+  cooldowns: 5
 };
 
 module.exports.handleEvent = async function ({ api, event }) {
@@ -78,6 +78,10 @@ module.exports.handleEvent = async function ({ api, event }) {
   if (!videoUrl) {
     return api.sendMessage("❌ Failed to retrieve video URL.", event.threadID, event.messageID);
   }
+
+  api.sendMessage("Downloading video...", event.threadID, (err, info) => {
+    setTimeout(() => api.unsendMessage(info.messageID), 10000);
+  });
 
   const fileName = `${Date.now()}.mp4`;
   const filePath = __dirname + "/" + fileName;
