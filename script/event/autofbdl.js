@@ -4,7 +4,7 @@ module.exports.config = {
   version: "1.0.0",
   credits: "Ry",
   description: "Auto download from TikTok, YouTube, Facebook, IG, X, etc.",
-  cooldowns: 5
+  cooldowns: 1
 };
 
 module.exports.handleEvent = async function ({ api, event }) {
