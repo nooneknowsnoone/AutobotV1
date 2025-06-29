@@ -8,16 +8,16 @@ module.exports.config = {
   role: 0,
   credits: "Ryy",
   aliases: [],
-  usages: "< reply to image >",
+  usages: "< reply to old photo >",
   cooldown: 5,
 };
 
 module.exports.run = async ({ api, event }) => {
   const { threadID, messageID, messageReply } = event;
-  const tempPath = path.join(__dirname, "cache", `restore_${Date.now()}.jpg`);
+  const tempPath = path.join(__dirname, "cache", `restored_${Date.now()}.jpg`);
 
   if (!messageReply || !messageReply.attachments || messageReply.attachments.length === 0) {
-    return api.sendMessage("❌ Please reply to an image to restore it.", threadID, messageID);
+    return api.sendMessage("❌ Please reply to an old or damaged photo.", threadID, messageID);
   }
 
   const attachment = messageReply.attachments[0];
@@ -25,24 +25,35 @@ module.exports.run = async ({ api, event }) => {
     return api.sendMessage("❌ The replied message must be a photo.", threadID, messageID);
   }
 
-  const imageUrl = encodeURIComponent(attachment.url);
-  const apiUrl = `https://rapido.zetsu.xyz/api/restore?imageUrl=${imageUrl}`;
-
   try {
-    api.sendMessage("🛠️ Restoring image, please wait...", threadID, messageID);
+    api.sendMessage("🛠️ Restoring photo, please wait...", threadID, messageID);
 
-    const response = await axios.get(apiUrl, { responseType: "arraybuffer" });
+    const response = await axios({
+      method: 'POST',
+      url: 'https://ai-powered-photo-restoration.p.rapidapi.com/',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-rapidapi-host': 'ai-powered-photo-restoration.p.rapidapi.com',
+        'x-rapidapi-key': '55a192bae2msh0d2f5a5b56dfbc3p1bd1b3jsn3fd826d5a4b4',
+      },
+      data: {
+        pictures_url: attachment.url
+      }
+    });
+
+    const restoredImageURL = response.data.url;
+    const imageBuffer = await axios.get(restoredImageURL, { responseType: "arraybuffer" });
 
     fs.ensureDirSync(path.dirname(tempPath));
-    fs.writeFileSync(tempPath, Buffer.from(response.data, "binary"));
+    fs.writeFileSync(tempPath, Buffer.from(imageBuffer.data, "binary"));
 
     api.sendMessage({
-      body: "✅ Image restored successfully!",
+      body: "✅ Photo restored successfully!",
       attachment: fs.createReadStream(tempPath)
     }, threadID, () => fs.unlinkSync(tempPath), messageID);
 
   } catch (error) {
-    console.error("Restore Error:", error.message);
-    api.sendMessage("❌ An error occurred while restoring the image.", threadID, messageID);
+    console.error("Restore Command Error:", error.message);
+    api.sendMessage("❌ An error occurred while restoring the photo.", threadID, messageID);
   }
 };
