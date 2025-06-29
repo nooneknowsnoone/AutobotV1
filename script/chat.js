@@ -3,7 +3,7 @@ const globalData = global.zenLeaf = global.zenLeaf || {};
 module.exports.config = {
   name: "chat",
   version: "1.0.0",
-  role: 1, // Admin only
+  role: 2, // Admin only
   hasPrefix: false,
   aliases: [],
   description: "Enable or disable group chat",
