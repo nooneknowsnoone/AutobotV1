@@ -1,67 +1,55 @@
-module.exports.config = {
-    name: "xmascap",
-    version: "1.0.0",
-    role: 0,
-    credits: "Rized",
-    description: "Generate a Christmas cap image using Facebook UID",
-    hasPrefix: false,
-    aliases: ["xmascap", "santahat"],
-    usage: "[xmascap <uid>]",
-    cooldown: 5
-};
-
 const axios = require("axios");
-const fs = require("fs");
+const fs = require("fs-extra");
 const path = require("path");
 
-module.exports.run = async function({ api, event, args }) {
-    try {
-        const uid = args[0];
+module.exports.config = {
+  name: "xmascap",
+  version: "1.0.0",
+  role: 0,
+  credits: "Ry",
+  aliases: ["xcap"],
+  usages: "[blue|red] < reply to an image >",
+  cooldown: 5,
+};
 
-        // Validate UID
-        if (!uid || isNaN(uid)) {
-            api.sendMessage("🎅 Usage: xmascap <uid>\nExample: xmascap 1000123456789", event.threadID);
-            return;
-        }
+module.exports.run = async ({ api, event, args }) => {
+  const { threadID, messageID, messageReply } = event;
+  const tempPath = path.join(__dirname, "cache", `xmascap_${Date.now()}.jpg`);
 
-        // API endpoint and image path
-        const url = `https://betadash-api-swordslush-production.up.railway.app/xmas-cap?userid=${uid}`;
-        const imagePath = path.join(__dirname, "xmascap.png");
+  // Validate reply to image
+  if (!messageReply || !messageReply.attachments || messageReply.attachments.length === 0) {
+    return api.sendMessage("🎅 Please reply to an image to add a Christmas cap.", threadID, messageID);
+  }
 
-        // Notify user
-        api.sendMessage("🎄 Generating image, please wait...", event.threadID);
+  const attachment = messageReply.attachments[0];
+  if (attachment.type !== "photo") {
+    return api.sendMessage("📸 The replied message must be a photo.", threadID, messageID);
+  }
 
-        // Fetch the image from the API
-        const response = await axios({
-            url,
-            method: "GET",
-            responseType: "stream"
-        });
+  // Validate cap color
+  let color = args[0]?.toLowerCase();
+  if (color !== "blue" && color !== "red") {
+    color = "red"; // default
+  }
 
-        const writer = fs.createWriteStream(imagePath);
-        response.data.pipe(writer);
+  const imageUrl = attachment.url;
+  const apiUrl = `https://kaiz-apis.gleeze.com/api/xmas-cap?imageUrl=${encodeURIComponent(imageUrl)}&color=${color}&apikey=bbcc44b9-4710-41c7-8034-fa2000ea7ae5`;
 
-        // Handle completion of the image download
-        writer.on("finish", async () => {
-            try {
-                await api.sendMessage({
-                    attachment: fs.createReadStream(imagePath)
-                }, event.threadID);
-                fs.unlinkSync(imagePath); // Clean up
-            } catch (sendErr) {
-                console.error("Error sending image:", sendErr);
-                api.sendMessage("❌ An error occurred while sending the image.", event.threadID);
-            }
-        });
+  try {
+    api.sendMessage(`🎄 Adding ${color} Christmas cap... Please wait!`, threadID, messageID);
 
-        // Handle file writing error
-        writer.on("error", (err) => {
-            console.error("Write stream error:", err);
-            api.sendMessage("❌ Error saving the image.", event.threadID);
-        });
+    const response = await axios.get(apiUrl, { responseType: "arraybuffer" });
 
-    } catch (error) {
-        console.error("XmasCap Command Error:", error.message);
-        api.sendMessage("❌ Failed to generate image.", event.threadID);
-    }
+    fs.ensureDirSync(path.dirname(tempPath));
+    fs.writeFileSync(tempPath, Buffer.from(response.data, "binary"));
+
+    api.sendMessage({
+      body: `✅ Here is your image with a ${color} Christmas cap! 🎅`,
+      attachment: fs.createReadStream(tempPath)
+    }, threadID, () => fs.unlinkSync(tempPath), messageID);
+
+  } catch (error) {
+    console.error("Xmas Cap Error:", error.message);
+    api.sendMessage("❌ An error occurred while processing the image. Please try again later.", threadID, messageID);
+  }
 };
