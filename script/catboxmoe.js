@@ -6,8 +6,8 @@ module.exports.config = {
   version: '1.0.0',
   role: 0,
   aliases: ['catbox', 'moehost'],
-  description: 'Upload an image to Catbox.moe with expiration.',
-  usage: '<reply to an image> [expiration: 1h|12h|24h|72h]',
+  description: 'Upload an image to Catbox.moe using Rapido API.',
+  usage: '<reply to an image>',
   credits: 'Ry',
   cooldown: 3,
 };
@@ -24,39 +24,34 @@ module.exports.run = async function ({ api, event, args }) {
     );
   }
 
-  let expiration = '1h'; // default
-  if (args[0] && ['1h', '12h', '24h', '72h'].includes(args[0])) {
-    expiration = args[0];
-  }
-
-  const apiUrl = `https://kaiz-apis.gleeze.com/api/catboxmoe?imageurl=${encodeURIComponent(imageUrl)}&expiration=${expiration}&apikey=bbcc44b9-4710-41c7-8034-fa2000ea7ae5`;
+  const apiUrl = `https://rapido.zetsu.xyz/api/catbox?file_link=${encodeURIComponent(imageUrl)}`;
 
   api.sendMessage(
-    `📤 Uploading image to Catbox.moe (expires in ${expiration})...`,
+    '📤 Uploading image to Catbox.moe via Rapido API...',
     threadID,
     async (err, info) => {
       if (err) return;
 
       try {
         const res = await axios.get(apiUrl);
-        const { url, expiration } = res.data;
+        const { url } = res.data;
 
         if (url) {
           api.sendMessage(
-            `✅ Image uploaded successfully!\n\n🌐 URL: ${url}\n🕒 Expiration: ${expiration}`,
+            `✅ Image uploaded successfully!\n\n🌐 URL: ${url}`,
             threadID,
             messageID
           );
         } else {
           api.editMessage(
-            '❌ Upload failed. No URL returned.',
+            '❌ Upload failed. No URL received.',
             info.messageID
           );
         }
       } catch (err) {
-        console.error('CatboxMoe API Error:', err.message);
+        console.error('CatboxMoe Upload Error:', err.message);
         api.editMessage(
-          '❌ An error occurred during upload. Try again later.',
+          '❌ An error occurred while uploading the image.',
           info.messageID
         );
       }
