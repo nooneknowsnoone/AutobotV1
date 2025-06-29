@@ -79,10 +79,6 @@ module.exports.handleEvent = async function ({ api, event }) {
     return api.sendMessage("❌ Failed to retrieve video URL.", event.threadID, event.messageID);
   }
 
-  api.sendMessage("Downloading video...", event.threadID, (err, info) => {
-    setTimeout(() => api.unsendMessage(info.messageID), 10000);
-  });
-
   const fileName = `${Date.now()}.mp4`;
   const filePath = __dirname + "/" + fileName;
 
