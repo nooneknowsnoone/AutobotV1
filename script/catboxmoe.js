@@ -5,10 +5,10 @@ module.exports.config = {
   name: 'catboxmoe',
   version: '1.0.0',
   role: 0,
-  aliases: ['moehost', 'catmoeuploader'],
-  description: 'Upload an image to Catbox via CatMoe API and get the hosted link.',
-  usage: '<reply to an image>',
-  credits: 'Converted by you | API by Jonell01',
+  aliases: ['catbox', 'moehost'],
+  description: 'Upload an image to Catbox.moe with expiration.',
+  usage: '<reply to an image> [expiration: 1h|12h|24h|72h]',
+  credits: 'Ry',
   cooldown: 3,
 };
 
@@ -18,40 +18,45 @@ module.exports.run = async function ({ api, event, args }) {
 
   if (!imageUrl) {
     return api.sendMessage(
-      '❌ Please reply to an image to upload it to Catbox via CatMoe!',
+      '❌ Please reply to an image to upload it to Catbox.moe!',
       threadID,
       messageID
     );
   }
 
-  const apiUrl = `https://jonell01-ccprojectsapihshs.hf.space/api/catmoe?url=${encodeURIComponent(imageUrl)}`;
+  let expiration = '1h'; // default
+  if (args[0] && ['1h', '12h', '24h', '72h'].includes(args[0])) {
+    expiration = args[0];
+  }
+
+  const apiUrl = `https://kaiz-apis.gleeze.com/api/catboxmoe?imageurl=${encodeURIComponent(imageUrl)}&expiration=${expiration}&apikey=bbcc44b9-4710-41c7-8034-fa2000ea7ae5`;
 
   api.sendMessage(
-    '📤 Uploading the image to Catbox.moe, please wait...',
+    `📤 Uploading image to Catbox.moe (expires in ${expiration})...`,
     threadID,
     async (err, info) => {
       if (err) return;
 
       try {
         const res = await axios.get(apiUrl);
-        const { fileUrl } = res.data;
+        const { url, expiration } = res.data;
 
-        if (fileUrl) {
+        if (url) {
           api.sendMessage(
-            `✅ Image uploaded successfully!\n\n🌐 URL: ${fileUrl}`,
+            `✅ Image uploaded successfully!\n\n🌐 URL: ${url}\n🕒 Expiration: ${expiration}`,
             threadID,
             messageID
           );
         } else {
           api.editMessage(
-            '❌ Upload failed. Please try again later.',
+            '❌ Upload failed. No URL returned.',
             info.messageID
           );
         }
       } catch (err) {
-        console.error('CatboxMoe Upload Error:', err.message);
+        console.error('CatboxMoe API Error:', err.message);
         api.editMessage(
-          '❌ An error occurred while uploading the image.',
+          '❌ An error occurred during upload. Try again later.',
           info.messageID
         );
       }
