@@ -39,7 +39,7 @@ module.exports.run = async function ({ api, event, args }) {
 
         if (link) {
           api.sendMessage(
-            `✅ Image uploaded successfully!\n🌐 Link: ${link}`,
+            `✅ Image uploaded successfully!\n\n🌐 Link: ${link}`,
             threadID,
             messageID
           );
