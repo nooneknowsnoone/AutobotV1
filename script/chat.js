@@ -14,8 +14,9 @@ module.exports.config = {
 };
 
 module.exports.run = async function ({ api, event, args }) {
-  const { threadID, messageID, senderID } = event;
-  const isAdmin = event.isGroup && event.senderID === event.threadID ? true : false;
+  const threadID = event.threadID;
+  const messageID = event.messageID;
+  const senderID = event.senderID;
 
   if (args.length === 0 || !["on", "off"].includes(args[0])) {
     return api.sendMessage(
@@ -25,45 +26,54 @@ module.exports.run = async function ({ api, event, args }) {
     );
   }
 
-  if (event.senderID !== senderID || event.isGroup && !isAdmin) {
-    return api.sendMessage("⚠️ You do not have permission to use this command!", threadID, messageID);
-  }
+  try {
+    const threadInfo = await api.getThreadInfo(threadID);
+    const adminIDs = threadInfo.adminIDs.map(admin => admin.id);
+    const isSenderAdmin = adminIDs.includes(senderID);
 
-  globalData[threadID] = globalData[threadID] || {};
+    if (!isSenderAdmin) {
+      return api.sendMessage("⚠️ You do not have permission to use this command!", threadID, messageID);
+    }
 
-  if (args[0] === "on") {
-    globalData[threadID].chatEnabled = true;
-    return api.sendMessage("✅ Chat restriction removed. Members can now chat freely.", threadID, messageID);
-  } else if (args[0] === "off") {
-    globalData[threadID].chatEnabled = false;
-    return api.sendMessage("🚫 Chat has been restricted. Non-admins will be kicked if they chat.", threadID, messageID);
+    globalData[threadID] = globalData[threadID] || {};
+
+    if (args[0] === "on") {
+      globalData[threadID].chatEnabled = true;
+      return api.sendMessage("✅ Chat restriction removed. Members can now chat freely.", threadID, messageID);
+    } else {
+      globalData[threadID].chatEnabled = false;
+      return api.sendMessage("🚫 Chat has been restricted. Non-admins will be kicked if they chat.", threadID, messageID);
+    }
+  } catch (error) {
+    console.error("Chat command error:", error.message);
+    return api.sendMessage(
+      `❌ An error occurred: ${error.message}`,
+      threadID,
+      messageID
+    );
   }
 };
 
-// Middleware-like listener for incoming messages
+// Optional: Middleware-like chat listener
 module.exports.onChat = async function ({ api, event }) {
   const { threadID, senderID } = event;
 
   const isEnabled = globalData[threadID]?.chatEnabled ?? true;
+  if (isEnabled) return;
 
-  if (!isEnabled) {
-    // Simulate role check: if not admin, remove user
-    api.getThreadInfo(threadID, (err, info) => {
-      if (err || !info) return;
+  try {
+    const threadInfo = await api.getThreadInfo(threadID);
+    const adminIDs = threadInfo.adminIDs.map(admin => admin.id);
+    const isSenderAdmin = adminIDs.includes(senderID);
 
-      const adminIDs = info.adminIDs.map(item => item.id);
-      const isSenderAdmin = adminIDs.includes(senderID);
-
-      if (!isSenderAdmin) {
-        api.removeUserFromGroup(senderID, threadID, (err) => {
-          if (err) return console.error("❌ Failed to kick user:", err);
-        });
-
-        return api.sendMessage(
-          "😼 CHAT DETECTED | The group is currently in 'chat off' mode. You have been kicked.",
-          threadID
-        );
-      }
-    });
+    if (!isSenderAdmin) {
+      await api.removeUserFromGroup(senderID, threadID);
+      return api.sendMessage(
+        "😼 CHAT DETECTED | The group is currently in 'chat off' mode. You have been kicked.",
+        threadID
+      );
+    }
+  } catch (error) {
+    console.error("Chat listener error:", error.message);
   }
 };
