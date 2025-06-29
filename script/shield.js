@@ -1,11 +1,11 @@
 const axios = require("axios");
 
 module.exports.config = {
-  name: "fbshield",
+  name: "shield",
   version: "1.0.0",
-  role: 2,
+  role: 0,
   hasPrefix: true,
-  aliases: [],
+  aliases: ["fbshield"],
   description: "Toggle Facebook Profile Shield using access token.",
   usage: "fbshield <token> | <on/off>",
   credits: "Ryy",
