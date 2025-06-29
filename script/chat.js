@@ -1,29 +1,36 @@
+const fs = require("fs-extra");
 const globalData = global.zenLeaf = global.zenLeaf || {};
 
 module.exports.config = {
   name: "chat",
   version: "1.0.0",
-  role: 2, // Admin only
-  hasPrefix: false,
-  aliases: [],
+  role: 2,
+  credits: "Ry",
   description: "Enable or disable group chat",
-  usage: "chat on | chat off",
-  credits: "Converted by you | Original by Mt",
+  usages: "chat on | chat off",
+  hasPrefix: false,
   cooldown: 5,
-  category: "box chat"
+  info: [
+    {
+      key: "on",
+      prompt: "Enables group chat for all members",
+      type: "",
+      example: "chat on"
+    },
+    {
+      key: "off",
+      prompt: "Restricts chat to admins only, non-admins will be kicked",
+      type: "",
+      example: "chat off"
+    }
+  ]
 };
 
-module.exports.run = async function ({ api, event, args }) {
-  const threadID = event.threadID;
-  const messageID = event.messageID;
-  const senderID = event.senderID;
+module.exports.run = async function({ api, args, event, utils }) {
+  const { threadID, messageID, senderID } = event;
 
-  if (args.length === 0 || !["on", "off"].includes(args[0])) {
-    return api.sendMessage(
-      "❌ Invalid usage.\n📌 Usage: chat on | chat off",
-      threadID,
-      messageID
-    );
+  if (!args[0] || !["on", "off"].includes(args[0])) {
+    return api.sendMessage("❌ Invalid usage.\n📌 Usage: chat on | chat off", threadID, messageID);
   }
 
   try {
@@ -44,18 +51,13 @@ module.exports.run = async function ({ api, event, args }) {
       globalData[threadID].chatEnabled = false;
       return api.sendMessage("🚫 Chat has been restricted. Non-admins will be kicked if they chat.", threadID, messageID);
     }
-  } catch (error) {
-    console.error("Chat command error:", error.message);
-    return api.sendMessage(
-      `❌ An error occurred: ${error.message}`,
-      threadID,
-      messageID
-    );
+  } catch (err) {
+    console.error("Chat command error:", err);
+    return api.sendMessage(`❌ An error occurred: ${err.message}`, threadID, messageID);
   }
 };
 
-// Optional: Middleware-like chat listener
-module.exports.onChat = async function ({ api, event }) {
+module.exports.onChat = async function({ api, event }) {
   const { threadID, senderID } = event;
 
   const isEnabled = globalData[threadID]?.chatEnabled ?? true;
@@ -68,12 +70,9 @@ module.exports.onChat = async function ({ api, event }) {
 
     if (!isSenderAdmin) {
       await api.removeUserFromGroup(senderID, threadID);
-      return api.sendMessage(
-        "😼 CHAT DETECTED | The group is currently in 'chat off' mode. You have been kicked.",
-        threadID
-      );
+      return api.sendMessage("😼 CHAT DETECTED | The group is currently in 'chat off' mode. You have been kicked.", threadID);
     }
-  } catch (error) {
-    console.error("Chat listener error:", error.message);
+  } catch (err) {
+    console.error("Chat listener error:", err.message);
   }
 };
