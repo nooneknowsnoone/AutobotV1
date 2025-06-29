@@ -21,7 +21,7 @@ module.exports.run = async function({ api, event, args }) {
 
   if (!query) {
     return api.sendMessage(
-      '❌ 𝗘𝗿𝗿𝗼𝗿: 𝗣𝗹𝗲𝗮𝘀𝗲 𝗲𝗻𝘁𝗲𝗿 𝗮 𝗾𝘂𝗲𝘀𝘁𝗶𝗼𝗻.\n𝗘𝘅𝗮𝗺𝗽𝗹𝗲: deepseek what is quantum physics?',
+      '❌ 𝗘𝗿𝗿𝗼𝗿: 𝗣𝗹𝗲𝗮𝘀𝗲 𝗲𝗻𝘁𝗲𝗿 𝗮 𝗾𝘂𝗲𝘀𝘁𝗶𝗼𝗻.\n𝗘𝘅𝗮𝗺𝗽𝗹𝗲: deepseek what is AI?',
       threadID,
       messageID
     );
@@ -34,17 +34,18 @@ module.exports.run = async function({ api, event, args }) {
       const url = `https://haji-mix-api.gleeze.com/api/deepseekv3?ask=${encodeURIComponent(query)}&api_key=4c756515a406d4ffafae6d6b06dcaeb8017b3634df0c07661a508b5b6a585df4`;
       const { data } = await axios.get(url);
 
-      if (!data || !data.answer) {
+      if (!data || !data.reply) {
         return api.editMessage('⚠️ 𝗘𝗿𝗿𝗼𝗿: 𝗡𝗼 𝘃𝗮𝗹𝗶𝗱 𝗿𝗲𝘀𝗽𝗼𝗻𝘀𝗲 𝗳𝗿𝗼𝗺 𝗗𝗲𝗲𝗽𝗦𝗲𝗲𝗸 𝗔𝗜.', info.messageID);
       }
 
-      const cleanedResponse = data.answer.replace(/\s+/g, ' ').trim();
+      const replyText = data.reply.trim();
+      const model = data.model || "unknown-model";
       const timePH = new Date().toLocaleString('en-US', { timeZone: 'Asia/Manila' });
 
       api.getUserInfo(senderID, (err, userInfo) => {
         const userName = userInfo?.[senderID]?.name || "Unknown";
-        const reply = `🤖 𝗗𝗲𝗲𝗽𝗦𝗲𝗲𝗸 𝗩𝟯\n━━━━━━━━━━━━━━━━━━\n${cleanedResponse}\n━━━━━━━━━━━━━━━━━━\n🗣 𝗔𝘀𝗸𝗲𝗱 𝗕𝘆: ${userName}\n⏰ 𝗧𝗶𝗺𝗲: ${timePH}`;
-        api.editMessage(reply, info.messageID);
+        const formatted = `🤖 𝗗𝗲𝗲𝗽𝗦𝗲𝗲𝗸 𝗩𝟯\n━━━━━━━━━━━━━━━━━━\n${replyText}\n━━━━━━━━━━━━━━━━━━\n🧠 𝗠𝗼𝗱𝗲𝗹: ${model}\n🗣 𝗔𝘀𝗸𝗲𝗱 𝗕𝘆: ${userName}\n⏰ 𝗧𝗶𝗺𝗲: ${timePH}`;
+        api.editMessage(formatted, info.messageID);
       });
 
     } catch (error) {
