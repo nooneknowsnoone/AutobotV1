@@ -20,15 +20,10 @@ module.exports.run = async function({ api, event }) {
     if (err) return;
 
     try {
-      const { data } = await axios.get('https://api.zetsu.xyz/random/quote', {
-        params: {
-          apikey: '80836f3451c2b3392b832988e7b73cdb'
-        }
-      });
+      const { data } = await axios.get('https://rapido.zetsu.xyz/api/quote');
 
-      if (data.status && data.result) {
-        const { quote, author } = data.result;
-        const message = `🌟 𝗤𝘂𝗼𝘁𝗲:\n"${quote}"\n\n— ${author || 'Unknown'}`;
+      if (data && data.quote) {
+        const message = `🌟 𝗤𝘂𝗼𝘁𝗲:\n"${data.quote}"\n\n— ${data.author || 'Unknown'}`;
         return api.editMessage(message, info.messageID);
       } else {
         throw new Error('Invalid API response');
