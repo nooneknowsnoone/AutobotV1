@@ -1,91 +1,76 @@
-const checkShortCut = (nickname, uid, userName) => {
-  if (/{userName}/gi.test(nickname)) {
-    nickname = nickname.replace(/{userName}/gi, userName);
-  }
-  if (/{userID}/gi.test(nickname)) {
-    nickname = nickname.replace(/{userID}/gi, uid);
-  }
-  return nickname;
-};
+function checkShortCut(nickname, uid, userName) {
+    return nickname
+        .replace(/\{userName\}/gi, userName)
+        .replace(/\{userID\}/gi, uid);
+}
 
 module.exports.config = {
-  name: "autosetname",
-  version: "1.3.0",
-  role: 1,
-  hasPrefix: false,
-  aliases: [],
-  description: "Auto set nickname for new members using shortcut templates",
-  usage: "autosetname set <nickname> | on | off | view",
-  credits: "Converted by you | Original by NTKhang",
-  cooldown: 5,
-  category: "box chat",
+    name: "autosetname",
+    version: "1.0.0",
+    hasPermssion: 1,
+    credits: "Ry",
+    description: "Auto-change nickname of new group members using a template",
+    commandCategory: "group",
+    usages: "autosetname [set <name> | on | off | view]",
+    cooldowns: 5
 };
 
-module.exports.run = async function ({ api, event, args, message, threadsData }) {
-  const { threadID } = event;
+module.exports.run = async function ({ api, event, args, threadsData }) {
+    const { threadID, messageID } = event;
+    const input = args[0];
 
-  switch (args[0]) {
-    case "set":
-    case "add":
-    case "config": {
-      if (args.length < 2) {
-        return message.reply("⚠️ Please enter the required configuration.");
-      }
-      const config = args.slice(1).join(" ");
-      await threadsData.set(threadID, config, "data.autoSetName");
-      return message.reply("✅ Nickname configuration saved successfully!");
+    switch (input) {
+        case "set":
+        case "add":
+        case "config": {
+            if (args.length < 2)
+                return api.sendMessage("⚠️ Please provide the nickname format.", threadID, messageID);
+
+            const configAutoSetName = args.slice(1).join(" ");
+            await threadsData.set(threadID, configAutoSetName, "data.autoSetName");
+            return api.sendMessage("✅ Configuration set successfully.", threadID, messageID);
+        }
+
+        case "view":
+        case "info": {
+            const current = await threadsData.get(threadID, "data.autoSetName");
+            if (!current) return api.sendMessage("ℹ️ No autoSetName configuration set yet.", threadID, messageID);
+            return api.sendMessage(`📌 Current autoSetName config:\n${current}`, threadID, messageID);
+        }
+
+        case "on":
+        case "off": {
+            const isEnabled = input === "on";
+            await threadsData.set(threadID, isEnabled, "settings.enableAutoSetName");
+            return api.sendMessage(`✅ autoSetName feature has been turned ${isEnabled ? "on" : "off"}.`, threadID, messageID);
+        }
+
+        default:
+            return api.sendMessage("❌ Invalid command. Use: set | view | on | off", threadID, messageID);
     }
-
-    case "view":
-    case "info": {
-      const config = await threadsData.get(threadID, "data.autoSetName");
-      return message.reply(
-        config
-          ? `📌 Current autoSetName config:\n${config}`
-          : "ℹ️ No autoSetName config found for this group."
-      );
-    }
-
-    case "on":
-    case "off": {
-      const enable = args[0] === "on";
-      await threadsData.set(threadID, enable, "settings.enableAutoSetName");
-      return message.reply(
-        enable
-          ? "✅ Auto nickname setting is now ON."
-          : "🚫 Auto nickname setting is now OFF."
-      );
-    }
-
-    default:
-      return message.reply(
-        "⚠️ Invalid usage. Use: autosetname set <nickname>, view, on, or off"
-      );
-  }
 };
 
-// Listen to new user events and apply nickname
-module.exports.onEvent = async function ({ event, api, threadsData, message }) {
-  if (event.logMessageType !== "log:subscribe") return;
+// Handles new user joining the group
+module.exports.handleEvent = async function ({ api, event, threadsData }) {
+    if (event.logMessageType !== "log:subscribe") return;
 
-  const threadID = event.threadID;
-  const isEnabled = await threadsData.get(threadID, "settings.enableAutoSetName");
-  if (!isEnabled) return;
+    const threadID = event.threadID;
+    const isEnabled = await threadsData.get(threadID, "settings.enableAutoSetName");
+    if (!isEnabled) return;
 
-  const config = await threadsData.get(threadID, "data.autoSetName");
-  if (!config) return;
+    const config = await threadsData.get(threadID, "data.autoSetName");
+    if (!config) return;
 
-  const addedParticipants = [...event.logMessageData.addedParticipants];
+    const newUsers = event.logMessageData.addedParticipants;
 
-  for (const user of addedParticipants) {
-    const { userFbId: uid, fullName: userName } = user;
-    try {
-      const finalName = checkShortCut(config, uid, userName);
-      await api.changeNickname(finalName, threadID, uid);
-    } catch (err) {
-      return message.reply(
-        "❌ Error occurred while auto-setting nickname. Try disabling invite link or try again later."
-      );
+    for (const user of newUsers) {
+        const { userFbId: uid, fullName } = user;
+        const nickname = checkShortCut(config, uid, fullName);
+        try {
+            await api.changeNickname(nickname, threadID, uid);
+        } catch (err) {
+            console.error("❌ Failed to set nickname:", err.message);
+            return api.sendMessage("⚠️ Error occurred while changing nickname. Try disabling invite links and retry.", threadID);
+        }
     }
-  }
 };
