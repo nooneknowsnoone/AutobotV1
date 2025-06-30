@@ -3,7 +3,7 @@ const axios = require("axios");
 module.exports.config = {
   name: "bluearchive",
   version: "1.0.0",
-  credits: "Kaizenji | Converted by you",
+  credits: "Ry",
   description: "Fetches a random Blue Archive image.",
   hasPrefix: false,
   cooldown: 3,
