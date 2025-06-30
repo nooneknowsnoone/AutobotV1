@@ -20,7 +20,7 @@ module.exports.run = async function ({ api, event }) {
   try {
     api.sendMessage("🔞 Fetching a Blowjob GIF...", threadID, async () => {
       try {
-        const res = await axios.get("https://kaiz-apis.gleeze.com/api/bluearchive", {
+        const res = await axios.get("https://kaiz-apis.gleeze.com/api/blowjob", {
           params: {
             ask: "Send a random blowjob GIF",
             uid: senderID,
