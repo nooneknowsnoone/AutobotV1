@@ -18,7 +18,7 @@ module.exports.run = async function ({ api, event }) {
   try {
     api.sendMessage("📥 Fetching a random Blue Archive image...", threadID, async () => {
       try {
-        const res = await axios.get("https://kaiz-apis.gleeze.com/api/gpt-4.1", {
+        const res = await axios.get("https://kaiz-apis.gleeze.com/api/bluearchive", {
           params: {
             ask: "Send me a random Blue Archive image.",
             uid: senderID,
