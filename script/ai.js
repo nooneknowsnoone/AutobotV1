@@ -2,13 +2,13 @@ const axios = require('axios');
 
 module.exports.config = {
   name: 'ai',
-  version: '1.0.0',
+  version: '1.1.0',
   role: 0,
   hasPrefix: false,
   aliases: ['gpt', 'gimage'],
-  description: "Analyze question or Vision",
+  description: "Analyze text or recognize image content using GPT-4.1",
   usage: "ai [question] or reply to an image",
-  credits: 'Ryy',
+  credits: 'Updated by you | Original by Ryy',
   cooldown: 3,
 };
 
@@ -33,12 +33,12 @@ module.exports.run = async function ({ api, event, args }) {
         imageUrl = event.messageReply.attachments[0].url;
       }
 
-      const { data } = await axios.get("https://kaiz-apis.gleeze.com/api/gpt-4o-pro", {
+      const { data } = await axios.get("https://kaiz-apis.gleeze.com/api/gpt-4.1", {
         params: {
           ask: finalPrompt,
           uid: senderID,
           imageUrl,
-          apikey: "8aa2f0a0-cbb9-40b8-a7d8-bba320cb9b10"
+          apikey: "8062a9eb-2a2e-458b-a1f0-4cd25de8b000"
         }
       });
 
@@ -46,7 +46,7 @@ module.exports.run = async function ({ api, event, args }) {
 
       api.getUserInfo(senderID, (err, infoUser) => {
         const userName = infoUser?.[senderID]?.name || "Unknown User";
-        const timePH = new Date().toLocaleString('en-US', { timeZone: 'Asia/Manila' });
+        const timePH = new Date(Date.now() + 8 * 60 * 60 * 1000).toLocaleString('en-US', { hour12: false }); // GMT+8
         const replyMessage = `🤖 𝗔𝗜 𝗔𝗦𝗦𝗜𝗦𝗧𝗔𝗡𝗧\n━━━━━━━━━━━━━━━━━━\n${responseText}\n━━━━━━━━━━━━━━━━━━\n🗣 𝗔𝘀𝗸𝗲𝗱 𝗕𝘆: ${userName}\n⏰ 𝗧𝗶𝗺𝗲: ${timePH}`;
 
         api.editMessage(replyMessage, info.messageID);
