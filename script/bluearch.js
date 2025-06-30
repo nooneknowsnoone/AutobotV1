@@ -1,50 +1,46 @@
 const axios = require("axios");
+const fs = require("fs");
+const path = require("path");
 
 module.exports.config = {
   name: "bluearchive",
   version: "1.0.0",
-  credits: "Ry",
+  credits: "Con",
   description: "Fetches a random Blue Archive image.",
   hasPrefix: false,
-  cooldown: 3,
-  aliases: ["ba", "archive"],
+  cooldown: 5,
+  aliases: ["ba"]
 };
 
 module.exports.run = async function ({ api, event }) {
-  const threadID = event.threadID;
-  const messageID = event.messageID;
-  const senderID = event.senderID;
+  const messageId = event.messageID;
+  const threadId = event.threadID;
+  const apiUrl = `https://kaiz-apis.gleeze.com/api/bluearchive?apikey=8062a9eb-2a2e-458b-a1f0-4cd25de8b000`;
 
   try {
-    api.sendMessage("📥 Fetching a random Blue Archive image...", threadID, async () => {
+    // Send waiting message
+    api.sendMessage("⏳ Fetching a Blue Archive image...", threadId, async (err, info) => {
+      if (err) return api.sendMessage("An error occurred while sending the waiting message.", threadId, messageId);
+
       try {
-        const res = await axios.get("https://kaiz-apis.gleeze.com/api/bluearchive", {
-          params: {
-            ask: "Send me a random Blue Archive image.",
-            uid: senderID,
-            apikey: "8062a9eb-2a2e-458b-a1f0-4cd25de8b000"
-          }
-        });
+        // Fetch image
+        const response = await axios.get(apiUrl, { responseType: "stream" });
 
-        const imageUrl = res.data.image || res.data.url || null;
-        const caption = res.data.response || "🎴 Here's your Blue Archive image!";
-
-        if (!imageUrl) {
-          return api.sendMessage("❌ No image found from the API.", threadID, messageID);
-        }
-
-        const imageRes = await axios.get(imageUrl, { responseType: "stream" });
-
-        api.sendMessage({
-          body: caption,
-          attachment: imageRes.data
-        }, threadID, messageID);
-      } catch (err) {
-        console.error("bluearchive error:", err);
-        api.sendMessage("❌ Failed to fetch Blue Archive image.", threadID, messageID);
+        // Send the image
+        return api.sendMessage({
+          body: "📸 Here's a Blue Archive image!",
+          attachment: response.data
+        }, threadId, () => {
+          // Delete waiting message after sending
+          api.unsendMessage(info.messageID);
+        }, messageId);
+      } catch (fetchErr) {
+        console.error("❌ Failed to fetch Blue Archive image:", fetchErr.message);
+        return api.sendMessage("❎ Error: Unable to fetch image. Please try again later.", threadId, messageId);
       }
     });
-  } catch (err) {
-    api.sendMessage("❌ Unexpected error occurred.", threadID, messageID);
+  } catch (error) {
+    console.error("❌ General error:", error.message);
+    api.sendMessage(`❎ Unexpected error: ${error.message}`, threadId, messageId);
   }
 };
