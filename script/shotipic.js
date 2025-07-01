@@ -4,48 +4,40 @@ module.exports.config = {
   name: "shotipic",
   version: "1.0.0",
   credits: "Ry",
-  description: "Fetch a random Shoti image from PH region.",
+  description: "Fetches random Shoti images from the API.",
   hasPrefix: false,
   cooldown: 5,
-  aliases: ["shotiimg", "shotiph"]
+  aliases: ["shotiimg", "shotirand"]
 };
 
 module.exports.run = async function ({ api, event }) {
-  const threadId = event.threadID;
-  const messageId = event.messageID;
-  const apiUrl = `https://shoti.fbbot.org/api/get-shoti?type=image&apikey=$shoti-54c9a5966a`;
+  const threadID = event.threadID;
+  const messageID = event.messageID;
+  const apiKey = "shoti-54c9a5966a";
+  const apiUrl = `https://shoti.fbbot.org/api/get-shoti?type=image&apikey=${apiKey}`;
 
   try {
-    // Send loading message
-    api.sendMessage("📸 Fetching Shoti image from PH region...", threadId, async (err, info) => {
-      if (err) return api.sendMessage("⚠️ Couldn't send loading message.", threadId, messageId);
-
+    api.sendMessage("📸 Fetching Shoti images...", threadID, async () => {
       try {
-        // Fetch image URLs
         const res = await axios.get(apiUrl);
-        const data = res.data;
+        const result = res.data?.result?.content;
 
-        if (data.code !== 200 || !data.result?.content?.length) {
-          return api.sendMessage("❌ Failed to fetch Shoti image.", threadId, messageId);
+        if (!Array.isArray(result) || result.length === 0) {
+          return api.sendMessage("❌ No images found from Shoti.", threadID, messageID);
         }
 
-        // Pick random image from content list
-        const randomImg = data.result.content[Math.floor(Math.random() * data.result.content.length)];
-        const imageStream = await axios.get(randomImg, { responseType: "stream" });
-
-        return api.sendMessage({
-          body: `👤 User: ${data.result.user?.username || "Unknown"}`,
-          attachment: imageStream.data
-        }, threadId, () => {
-          api.unsendMessage(info.messageID);
-        }, messageId);
-      } catch (fetchErr) {
-        console.error("❌ Error fetching image:", fetchErr.message);
-        return api.sendMessage("❎ Error: Could not load image. Try again later.", threadId, messageId);
+        for (const url of result) {
+          const imgRes = await axios.get(url, { responseType: "stream" });
+          await api.sendMessage({
+            attachment: imgRes.data
+          }, threadID);
+        }
+      } catch (error) {
+        console.error("❌ Shoti fetch error:", error.message);
+        api.sendMessage("❎ Failed to retrieve images from Shoti API.", threadID, messageID);
       }
     });
   } catch (err) {
-    console.error("❌ General error:", err.message);
-    api.sendMessage(`❎ Unexpected error: ${err.message}`, threadId, messageId);
+    api.sendMessage(err.message, threadID);
   }
 };
