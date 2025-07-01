@@ -1,123 +1,134 @@
 body {
-     padding: 20px;
-     background-color: #f8f9fa;
-     font-family: 'Poppins', sans-serif;
-}
- .container {
-     background-color: #ffffff;
-     border-radius: 10px;
-     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-     padding: 20px;
-     margin-top: 20px;
-     margin-bottom: 20px;
-}
- h1 {
-     color: #343a40;
-}
- label {
-     color: #495057;
-}
- .centered-textarea {
-     display: block;
-     margin: 0 auto;
-     width: 100%;
-     min-height: 150px;
-     padding: 10px;
-     box-sizing: border-box;
-     border: 1px solid #ced4da;
-     border-radius: 5px;
-     resize: none;
-}
- .btn-primary {
-     background-color: #007bff;
-     border: 1px solid #007bff;
-}
- .btn-primary:hover {
-     background-color: #0056b3;
-     border: 1px solid #0056b3;
-}
- .success-message {
-     color: green;
-     margin-top: 10px;
-}
- .footer {
-     background-color: rgba(255, 255, 255, 0.7);
-     padding: 10px;
-     text-align: center;
-     font-size: 16px;
-     color: #555;
-     margin-top: 50px;
-     border-top: 1px solid #ccc;
-     position: fixed;
-     bottom: 0;
-     left: 0;
-     width: 100%;
-}
- .footer p {
-     margin: 0;
-     display: inline-block;
-     margin-right: 30px;
-}
- .container-buttons {
-     margin-top: 20px;
-     text-align: center;
-}
- .container-buttons .btn {
-     margin: 5px;
+  margin: 0;
+  padding-top: 70px;
+  background: linear-gradient(to top, #0b0c2a, #1c144e);
+  font-family: 'Poppins', sans-serif;
+  color: #f4f4f4;
+  min-height: 100vh;
 }
 
- #result {
-     padding: 10px;
-     margin-top: 20px;
-     border-radius: 5px;
+.navbar {
+  background: #1c144e;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
 }
- .center-placeholder::placeholder {
-     text-align: center;
+
+.navbar-brand,
+.navbar-nav .nav-link {
+  color: #f4f4f4 !important;
+}
+
+.navbar-nav .nav-link:hover,
+.navbar-nav .nav-item.active .nav-link {
+  color: #ffc8ff !important;
+}
+
+.dropdown-menu {
+  background-color: #1c144e;
+  border: none;
+}
+
+.dropdown-item {
+  color: #ccc;
+}
+
+.dropdown-item:hover {
+  background-color: #2b1e5a;
+  color: white;
+}
+
+.container {
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 20px;
+  margin-top: 20px;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.05);
+}
+
+h1, h2 {
+  color: #fceaff;
+  text-align: center;
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 500;
+  color: #fceaff;
+  margin-top: 25px;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+p, label {
+  color: #ccc;
+}
+
+textarea, input[type="text"] {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
+  margin-top: 10px;
+}
+
+textarea::placeholder {
+  color: #bbb;
+  text-align: center;
+}
+
+.btn {
+  padding: 12px 20px;
+  background: linear-gradient(to right, #c471ed, #f64f59);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 10px;
+  width: 100%;
+  box-shadow: 0 0 12px rgba(246, 79, 89, 0.4);
+  transition: all 0.3s ease-in-out;
+}
+
+.btn:hover {
+  box-shadow: 0 0 25px rgba(246, 79, 89, 0.7);
+  transform: scale(1.03);
 }
 
 .form-check {
   display: flex;
-  margin-top: 10px;
-  padding: 14px;
   align-items: center;
-  border: 1px solid #ccc;
+  padding: 10px;
+  margin-top: 10px;
+  background-color: rgba(255, 255, 255, 0.05);
   border-radius: 8px;
   cursor: pointer;
-  transition: background-color 0.3s ease, border-color 0.3s ease; 
-  border-color: #ccc;
-  background-color: #fff;
-}
-
-.form-check:hover {
-  background-color: #f0f0f0; 
-  border-color: #333; 
 }
 
 .form-check-input {
-  margin-right: 10px; 
-  opacity: 0;
+  margin-right: 10px;
+  transform: scale(1.3);
+}
+
+.footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  text-align: center;
+  background-color: #0b0c2a;
+  color: #aaa;
+  padding: 10px;
+  font-size: 14px;
+  border-top: 1px solid rgba(255,255,255,0.1);
 }
 
 .disable {
   display: none;
 }
 
-#inputOfPrefix, #inputOfAdmin {
-  padding: 13px;
-  width: 200px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background-color 0.3s ease, border-color 0.3s ease; 
-  border-color: #ccc;
-  background-color: #fff;
-}
-#listOfCommands, #listOfCommandsEvent, #prefixOfCommands, #adminOfCommands {
-  border: none !important;
-}
-
-#listOfCommands:not(.modal), #listOfCommandsEvent:not(.modal), #prefixOfCommands:not(.modal), #adminOfCommands:not(.modal) {
-  box-shadow: none !important;
 }
 #json-data{
 background-image: url('https://cdnb.artstation.com/p/assets/images/images/066/149/065/original/killer-rabbit-media-chinese-alleyway-export.gif?1692171513');
