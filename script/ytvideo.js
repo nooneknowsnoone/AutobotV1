@@ -8,7 +8,7 @@ module.exports.config = {
   version: "1.0.1",
   role: 0,
   description: "Search and download YouTube videos.",
-  credits: "Converted by Kaizenji",
+  credits: "Ry",
   cooldown: 10,
 };
 
