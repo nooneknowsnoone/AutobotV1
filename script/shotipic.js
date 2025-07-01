@@ -13,7 +13,7 @@ module.exports.config = {
 module.exports.run = async function ({ api, event }) {
   const threadID = event.threadID;
   const messageID = event.messageID;
-  const apiKey = "shoti-54c9a5966a";
+  const apiKey = "$shoti-54c9a5966a";
   const apiUrl = `https://shoti.fbbot.org/api/get-shoti?type=image&apikey=${apiKey}`;
 
   try {
