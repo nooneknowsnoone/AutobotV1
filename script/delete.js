@@ -33,7 +33,7 @@ module.exports.config = {
 };
 
 module.exports.run = async function ({ api, event, args }) {
-  const admin = '100095290150085';
+  const admin = '61556437971771';
   if (!admin.includes(event.senderID))
     return api.sendMessage(formatFont("This Command is only for AUTOBOT owner."), event.threadID, event.messageID);
 
