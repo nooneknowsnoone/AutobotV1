@@ -1,7 +1,7 @@
 const axios = require("axios");
 
 module.exports.config = {
-  name: "cm",
+  name: "countmem",
   version: "1.0.1",
   role: 0,
   credits: "Jibanyan",
