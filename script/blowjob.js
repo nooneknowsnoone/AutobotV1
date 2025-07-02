@@ -3,6 +3,7 @@ const axios = require("axios");
 module.exports.config = {
   name: "blowjob",
   version: "1.0.0",
+  role: 2,
   credits: "Ry",
   description: "Fetches a random NSFW Blowjob GIF.",
   hasPrefix: false,
