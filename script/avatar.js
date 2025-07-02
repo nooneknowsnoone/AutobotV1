@@ -10,7 +10,7 @@ module.exports.config = {
   aliases: [],
   description: "Change bot avatar using an image URL or by replying to an image.",
   usage: "avatar <image_url> or reply to an image",
-  credits: "Converted by you | Original by Ry",
+  credits: "Converted by Ry",
   cooldown: 5,
 };
 
