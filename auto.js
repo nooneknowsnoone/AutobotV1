@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const login = require('./fb-chat-api/index');
+const login = require('ws3-fca');
 const express = require('express');
 const port = process.env.PORT || 3000;
 const app = express();
