@@ -3,6 +3,7 @@ const axios = require('axios');
 module.exports.config = {
   name: "hentaigif",
   version: "1.0.0",
+  role: 2,
   credits: "developer",
   description: "Fetches a random Hentai GIF.",
   hasPrefix: false,
