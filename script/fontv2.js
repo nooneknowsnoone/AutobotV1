@@ -350,7 +350,7 @@ function generateText(text, font) {
 }
 
 module.exports.config = {
-    name: "font",
+    name: "fontv2",
     version: "1.0.0",
     role: 0,
     credits: "Developer",
