@@ -1,44 +1,49 @@
-const axios = require('axios');
+const axios = require("axios");
+const fs = require("fs");
+const path = require("path");
 
 module.exports.config = {
-  name: "animcdp",
+  name: "animecdp",
   version: "1.0.0",
+  role: 0,
   credits: "Ry",
-  description: "Get a random character display picture (CDP) with anime info.",
+  description: "Get couple DP images",
   hasPrefix: false,
+  aliases: ["getcdp", "cdp"],
+  usage: "[cdp]",
   cooldown: 5,
-  aliases: ["charpic", "cdphoto"]
 };
 
-module.exports.run = async function ({ api, event, args }) {
-  const { threadID, messageID } = event;
-  const apiUrl = 'https://ace-rest-api.onrender.com/api/cdp';
+module.exports.run = async function ({ api, event }) {
+  const apiUrl = "https://ace-rest-api.onrender.com/api/cdp";
 
   try {
-    api.sendMessage("📥 Fetching character display picture...", threadID, async () => {
-      try {
-        const { data } = await axios.get(apiUrl);
+    api.sendMessage("⌛ Fetching couple DP images, please wait...", event.threadID);
 
-        if (!data || !data.avatar || !data.character || !data.anime) {
-          return api.sendMessage("❌ Failed to fetch CDP data.", threadID, messageID);
-        }
+    const response = await axios.get(apiUrl);
+    const { avatar, character, anime } = response.data;
 
-        const text = `👥 𝗖𝗵𝗮𝗿𝗮𝗰𝘁𝗲𝗿: ${data.character}\n🎞️ 𝗔𝗻𝗶𝗺𝗲: ${data.anime}`;
-        await api.sendMessage(text, threadID);
+    const imagePaths = [];
 
-        // Send each image one by one
-        for (const url of data.avatar) {
-          const img = await axios.get(url, { responseType: 'stream' });
-          await api.sendMessage({ attachment: img.data }, threadID);
-        }
+    for (let i = 0; i < avatar.length; i++) {
+      const imgBuffer = await axios.get(avatar[i], { responseType: "arraybuffer" });
+      const filePath = path.join(__dirname, `cdp_${i}.jpg`);
+      fs.writeFileSync(filePath, imgBuffer.data);
+      imagePaths.push(filePath);
+    }
 
-      } catch (err) {
-        console.error("cdp command error:", err);
-        api.sendMessage("❌ Error occurred while processing the CDP request.", threadID, messageID);
+    const attachments = imagePaths.map(p => fs.createReadStream(p));
+    const message = `🌸 Character: ${character}\n🎥 Anime: ${anime}`;
+
+    api.sendMessage(
+      { body: message, attachment: attachments },
+      event.threadID,
+      () => {
+        imagePaths.forEach(p => fs.unlinkSync(p));
       }
-    });
-  } catch (error) {
-    console.error("Unexpected error:", error.message);
-    api.sendMessage("❌ Unable to connect to the CDP API.", threadID, messageID);
+    );
+  } catch (err) {
+    console.error("CDP Fetch Error:", err.message);
+    api.sendMessage("❌ Failed to fetch Couple DP. Please try again later.", event.threadID);
   }
 };
