@@ -1,15 +1,137 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>🤖 | Automated Facebook Bot Messenger</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <title>Welcome sir!</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" href="https://i.imgur.com/BNKq0fl.jpeg" type="image/jpeg">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap">
-  <link rel="stylesheet" href="styles.css">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #1f1c2c, #928dab);
+      color: #fff;
+    }
+
+    .navbar {
+      background-color: #1b1530 !important;
+      box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+    }
+
+    .navbar-brand,
+    .navbar-nav .nav-link {
+      color: #ffffff !important;
+    }
+
+    .navbar-nav .nav-link:hover {
+      color: #c084fc !important;
+    }
+
+    .dropdown-menu {
+      background-color: #271f46;
+      border: none;
+    }
+
+    .dropdown-item {
+      color: #ccc;
+    }
+
+    .dropdown-item:hover {
+      background-color: #3a2c5c;
+      color: white;
+    }
+
+    header {
+      text-align: center;
+      padding: 40px 20px;
+    }
+
+    header img {
+      border-radius: 50%;
+      width: 150px;
+      height: 150px;
+      border: 4px solid #fff;
+    }
+
+    header h1 {
+      font-size: 2rem;
+      margin: 15px 0 5px;
+    }
+
+    header p {
+      font-size: 1rem;
+      color: #d1c4e9;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: auto;
+      padding: 20px;
+    }
+
+    .section {
+      background-color: rgba(255, 255, 255, 0.05);
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+    }
+
+    .section h2 {
+      font-size: 1.5rem;
+      margin-bottom: 10px;
+      border-bottom: 1px solid #fff2;
+      padding-bottom: 5px;
+    }
+
+    .skills span {
+      display: inline-block;
+      background-color: #7e57c2;
+      padding: 6px 12px;
+      margin: 5px;
+      border-radius: 20px;
+      font-size: 0.9rem;
+    }
+
+    .socials a {
+      margin: 0 10px;
+      color: #fff;
+      font-size: 1.5rem;
+      transition: color 0.3s;
+    }
+
+    .socials a:hover {
+      color: #ffca28;
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      font-size: 0.9rem;
+      color: #ccc;
+    }
+
+    @media screen and (max-width: 600px) {
+      header h1 {
+        font-size: 1.5rem;
+      }
+
+      .skills span {
+        font-size: 0.8rem;
+        padding: 5px 10px;
+      }
+
+      .socials a {
+        font-size: 1.2rem;
+      }
+    }
+  </style>
 </head>
 <body>
+
+  <!-- Bootstrap Navbar -->
   <nav class="navbar navbar-expand-lg navbar-dark">
     <a class="navbar-brand" href="#">🤖 Home</a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
@@ -27,70 +149,47 @@
           </div>
         </li>
         <li class="nav-item"><a class="nav-link" href="online_user">Active</a></li>
+ <li class="nav-item"><a class="nav-link" href="autobot">Autobot</a></li>
       </ul>
     </div>
   </nav>
 
+  <!-- Profile Header -->
+  <header>
+    <img src="https://i.ibb.co/5X1xvvsZ/515251451-711678378381710-506000898743991502-n-jpg-stp-dst-jpg-s480x480-tt6-nc-cat-103-ccb-1-7-nc-si.jpg" alt="Profile">
+    <h1>Ry Christiannn</h1>
+    <p>Automated Bot Enthusiast</p>
+  </header>
+
+  <!-- Profile Content -->
   <div class="container">
-    <h2 class="text-center">ENTER APPSTATE</h2>
-    <form id="json-form" onsubmit="submitForm(event)">
-      <textarea id="json-data" class="form-control centered-textarea center-placeholder" placeholder=""></textarea>
-    </form>
-    <p>Greetings! Begin by entering your cookie. Scroll down to carefully review our Terms and Privacy.</p>
-  </div>
-
-  <div class="container">
-    <h1 class="text-center" style="font-size: 20px;">Terms and Conditions and Privacy Policy</h1>
-    <p>* Persistent Connection: Your chatbot stays active post-login, unless you change the password.</p>
-    <p>* Cookie Security: Never share your cookie; it's vital for your account's security.</p>
-    <p>* Strong Passwords: Use unique, robust passwords. Avoid Direct Bot Access: Doing so may disrupt service.</p>
-    <p>* Troubleshooting: If the bot is unresponsive, return to the website. If problems persist, change the account.</p>
-    <p>* Dummy Accounts: Use disposable accounts for added security.</p>
-    <p>* No Malicious Use: Malicious activity will result in termination and potential legal action.</p>
-    <p>* Disclaimers: We are not responsible for unauthorized access, account locking, or hosting platform actions.</p>
-    <p>* Terms of Service: Adhere to hosting platform terms.</p>
-
-    <div id="listOfCommands">
-      <h1 style="font-size: 16px;">Choose your commands:</h1>
-      <button class="btn btn-primary" onclick="selectAllCommands()">Select all commands</button>
+    <div class="section about">
+      <h2>About Me</h2>
+      <p>Hello! I’m Ry, a passionate developer focused on creating intelligent bots and modern web experiences. I enjoy working with APIs, automating systems, and building intuitive UI with a sleek dark aesthetic.</p>
     </div>
 
-    <div id="listOfCommandsEvent">
-      <h1 style="font-size: 16px;">Choose your event commands:</h1>
-      <button class="btn btn-primary" onclick="selectAllEvents()">Select all events</button>
+    <div class="section skills">
+      <h2>Skills (Still Learning)</h2>
+      <span>JavaScript</span>
+      <span>HTML & CSS</span>
     </div>
 
-    <div id="prefixOfCommands">
-      <h1 style="font-size: 16px;">Prefix (optional):</h1>
-      <input type="text" id="inputOfPrefix">
-    </div>
-
-    <div id="adminOfCommands">
-      <h1 style="font-size: 16px;">Admin UID (important):</h1>
-      <input type="text" id="inputOfAdmin">
-    </div>
-
-    <label style="font-size: 14px; display: flex; align-items: center; padding: 22px;">
-      <input type="checkbox" id="agreeCheckbox" style="margin-right: 10px;">
-      Checking this box certifies that I have read, understood, and agreed to the Terms and Conditions.
-    </label>
-
-    <div class="text-center">
-      <button class="btn btn-primary" onclick="State()" disabled id="submitButton" style="width: 100%">Submit</button>
+    <div class="section socials">
+      <h2>Connect</h2>
+      <a href="https://github.com/" target="_blank"><i class="fab fa-github"></i></a>
+      <a href="https://facebook.com/" target="_blank"><i class="fab fa-facebook"></i></a>
+      <a href="https://twitter.com/" target="_blank"><i class="fab fa-twitter"></i></a>
     </div>
   </div>
 
-  <div id="result" class="container text-center" style="display: none;"></div>
+  <footer>
+    &copy; 2025 Ry. All rights reserved.
+  </footer>
 
-  <div class="footer">
-    <p>Time: <span id="time"></span></p>
-    <p>Ping: <span id="ping"></span></p>
-  </div>
-
-  <!-- JS Scripts -->
+  <!-- Bootstrap Scripts -->
   <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-  <script src="script.js"></script>
+
 </body>
 </html>
