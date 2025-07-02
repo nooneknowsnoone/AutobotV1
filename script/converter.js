@@ -15,47 +15,55 @@ function formatFont(text) {
 
 module.exports.config = {
   name: "converter",
-  version: "1.0.0",
+  version: "2.0.0",
   role: 0,
   hasPrefix: false,
-  aliases: ["convert", "related"],
-  description: "Convert your topic into relevant keywords or suggestions.",
-  usage: "converter <word or topic>",
+  aliases: ["keywords", "keygen"],
+  description: "Extract keywords from a question using PinoyGPT API.",
+  usage: "converter <question>",
   credits: "Ry",
-  cooldown: 2
+  cooldown: 2,
 };
 
 module.exports.run = async function ({ api, event, args }) {
-  const query = args.join(" ").trim();
+  const question = args.join(" ").trim();
   const { threadID, messageID, senderID } = event;
 
-  if (!query) {
-    return api.sendMessage(formatFont("❗ Please provide a topic or question."), threadID, messageID);
+  if (!question) {
+    return api.sendMessage(formatFont("❗ Please provide a question or phrase."), threadID, messageID);
   }
 
-  api.sendMessage(formatFont("🔄 𝗖𝗼𝗻𝘃𝗲𝗿𝘁𝗶𝗻𝗴 𝗾𝘂𝗲𝗿𝘆..."), threadID, async (err, info) => {
+  api.sendMessage(formatFont("🔎 𝗘𝘅𝘁𝗿𝗮𝗰𝘁𝗶𝗻𝗴 𝗸𝗲𝘆𝘄𝗼𝗿𝗱𝘀..."), threadID, async (err, info) => {
     if (err) return;
 
     try {
-      const { data } = await axios.get(`https://xvi-rest-api.vercel.app/api/question/to/converter?question=${encodeURIComponent(query)}`);
-      const keywords = data.response || "❌ No keywords found.";
+      const res = await axios.post(
+        "https://www.pinoygpt.com/api/question_to_keywords.php",
+        { question },
+        { headers: { "Content-Type": "application/json" } }
+      );
 
+      if (!res.data.success || !Array.isArray(res.data.keywords)) {
+        throw new Error("No keywords returned.");
+      }
+
+      const keywordList = res.data.keywords.join(", ");
       const timePH = new Date(Date.now() + 8 * 60 * 60 * 1000).toLocaleString("en-US", { hour12: false });
 
-      const msg = `
-🧠 𝗧𝗢𝗣𝗜𝗖 𝗞𝗘𝗬𝗪𝗢𝗥𝗗 𝗖𝗢𝗡𝗩𝗘𝗥𝗧𝗘𝗥
+      const message = `
+🧠 𝗞𝗘𝗬𝗪𝗢𝗥𝗗 𝗖𝗢𝗡𝗩𝗘𝗥𝗧𝗘𝗥
 ━━━━━━━━━━━━━━━━━━━━
-${keywords}
+${keywordList}
 ━━━━━━━━━━━━━━━━━━━━
-📌 𝗤𝘂𝗲𝗿𝘆: ${query}
+📌 𝗤𝘂𝗲𝗿𝘆: ${question}
 ⏰ 𝗧𝗶𝗺𝗲: ${timePH}
       `.trim();
 
-      api.editMessage(formatFont(msg), info.messageID);
+      api.editMessage(formatFont(message), info.messageID);
 
     } catch (err) {
-      console.error("Converter error:", err);
-      api.editMessage(formatFont("❌ Error: " + (err.message || "Unknown error.")), info.messageID);
+      console.error("Keyword extraction error:", err);
+      api.editMessage(formatFont("❌ Failed to extract keywords. Please try again."), info.messageID);
     }
   });
 };
