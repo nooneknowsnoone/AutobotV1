@@ -12,14 +12,6 @@ function formatFont(text) {
   return [...text].map(c => (fontEnabled && fontMapping[c] ? fontMapping[c] : c)).join('');
 }
 
-function splitMessageIntoChunks(message, chunkSize) {
-  const chunks = [];
-  for (let i = 0; i < message.length; i += chunkSize) {
-    chunks.push(message.slice(i, i + chunkSize));
-  }
-  return chunks;
-}
-
 module.exports.config = {
   name: "bossing",
   version: "1.0.0",
@@ -54,23 +46,21 @@ module.exports.run = async function ({ api, event, args }) {
     });
 
     const reply = data?.response || "❌ No response from Bossing AI.";
-    const chunks = splitMessageIntoChunks(reply, 2000);
 
     api.getUserInfo(senderID, async (err, infoUser) => {
       const userName = infoUser?.[senderID]?.name || "Unknown User";
       const timePH = new Date(Date.now() + 8 * 60 * 60 * 1000).toLocaleString('en-US', { hour12: false });
 
-      chunks[0] = `
+      const fullMessage = `
 🤖 𝗕𝗼𝘀𝘀𝗶𝗻𝗴 𝗔𝗜
 ━━━━━━━━━━━━━━━━━━
-${chunks[0]}`.trim();
+${reply}
+━━━━━━━━━━━━━━━━━━
+🗣 𝗔𝘀𝗸𝗲𝗱 𝗕𝘆: ${userName}
+⏰ 𝗧𝗶𝗺𝗲: ${timePH}
+      `.trim();
 
-      chunks[chunks.length - 1] += `\n━━━━━━━━━━━━━━━━━━\n🗣 𝗔𝘀𝗸𝗲𝗱 𝗕𝘆: ${userName}\n⏰ 𝗧𝗶𝗺𝗲: ${timePH}`;
-
-      await api.editMessage(formatFont(chunks[0]), waitMsg.messageID);
-      for (let i = 1; i < chunks.length; i++) {
-        await api.sendMessage(formatFont(chunks[i]), threadID);
-      }
+      await api.editMessage(formatFont(fullMessage), waitMsg.messageID);
     });
 
   } catch (error) {
