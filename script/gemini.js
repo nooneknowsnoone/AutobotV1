@@ -67,7 +67,7 @@ module.exports.run = async function ({ api, event, args }) {
         const timePH = new Date(Date.now() + 8 * 60 * 60 * 1000).toLocaleString('en-US', { hour12: false });
 
         const replyMessage = `
-🧠 𝗚𝗘𝗠𝗜𝗡𝗜 𝗩𝗜𝗦𝗜𝗢𝗡
+🤖 𝗚𝗘𝗠𝗜𝗡𝗜 𝗩𝗜𝗦𝗜𝗢𝗡
 ━━━━━━━━━━━━━━━━━━
 ${result}
 ━━━━━━━━━━━━━━━━━━
