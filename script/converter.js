@@ -1,4 +1,4 @@
-const axios = require('axios');
+const axios = require("axios");
 
 let fontEnabled = true;
 
@@ -10,62 +10,52 @@ function formatFont(text) {
     N: "𝖭", O: "𝖮", P: "𝖯", Q: "𝖰", R: "𝖱", S: "𝖲", T: "𝖳", U: "𝖴", V: "𝖵", W: "𝖶", X: "𝖷", Y: "𝖸", Z: "𝖹"
   };
 
-  let formattedText = "";
-  for (const char of text) {
-    formattedText += fontEnabled && fontMapping[char] ? fontMapping[char] : char;
-  }
-  return formattedText;
+  return text.split("").map(char => fontEnabled && fontMapping[char] ? fontMapping[char] : char).join("");
 }
 
 module.exports.config = {
   name: "converter",
   version: "1.0.0",
-  credits: "Ry",
-  description: "Convert a word to related keywords using XVI API",
-  usage: "converter <word>",
-  cooldown: 3,
   role: 0,
   hasPrefix: false,
-  aliases: [],
+  aliases: ["convert", "related"],
+  description: "Convert your topic into relevant keywords or suggestions.",
+  usage: "converter <word or topic>",
+  credits: "Ry",
+  cooldown: 2
 };
 
 module.exports.run = async function ({ api, event, args }) {
-  const input = args.join(" ").trim();
-  const threadID = event.threadID;
-  const senderID = event.senderID;
-  const messageID = event.messageID;
+  const query = args.join(" ").trim();
+  const { threadID, messageID, senderID } = event;
 
-  if (!input) {
-    return api.sendMessage(formatFont("❗ Please provide a word to convert."), threadID, messageID);
+  if (!query) {
+    return api.sendMessage(formatFont("❗ Please provide a topic or question."), threadID, messageID);
   }
 
-  api.sendMessage(formatFont("🔄 𝗖𝗢𝗡𝗩𝗘𝗥𝗧𝗜𝗡𝗚 𝗬𝗢𝗨𝗥 𝗪𝗢𝗥𝗗..."), threadID, async (err, info) => {
+  api.sendMessage(formatFont("🔄 𝗖𝗼𝗻𝘃𝗲𝗿𝘁𝗶𝗻𝗴 𝗾𝘂𝗲𝗿𝘆..."), threadID, async (err, info) => {
     if (err) return;
 
     try {
-      const { data } = await axios.get(`https://xvi-rest-api.vercel.app/api/question/to/converter?question=${encodeURIComponent(input)}`);
-      const result = data.answer || "❌ No related keywords found.";
+      const { data } = await axios.get(`https://xvi-rest-api.vercel.app/api/question/to/converter?question=${encodeURIComponent(query)}`);
+      const keywords = data.response || "❌ No keywords found.";
 
-      api.getUserInfo(senderID, (err, infoUser) => {
-        const userName = infoUser?.[senderID]?.name || "Unknown User";
-        const timePH = new Date(Date.now() + 8 * 60 * 60 * 1000).toLocaleString("en-US", { hour12: false });
+      const timePH = new Date(Date.now() + 8 * 60 * 60 * 1000).toLocaleString("en-US", { hour12: false });
 
-        const finalReply = `
-🔤 𝗪𝗢𝗥𝗗 𝗖𝗢𝗡𝗩𝗘𝗥𝗧𝗘𝗥
-━━━━━━━━━━━━━━━━━━
-${result}
-━━━━━━━━━━━━━━━━━━
-🔎 𝗪𝗼𝗿𝗱: ${input}
-🗣 𝗕𝘆: ${userName}
-⏰ 𝗧𝗶𝗺𝗲: ${timePH}`.trim();
+      const msg = `
+🧠 𝗧𝗢𝗣𝗜𝗖 𝗞𝗘𝗬𝗪𝗢𝗥𝗗 𝗖𝗢𝗡𝗩𝗘𝗥𝗧𝗘𝗥
+━━━━━━━━━━━━━━━━━━━━
+${keywords}
+━━━━━━━━━━━━━━━━━━━━
+📌 𝗤𝘂𝗲𝗿𝘆: ${query}
+⏰ 𝗧𝗶𝗺𝗲: ${timePH}
+      `.trim();
 
-        api.editMessage(formatFont(finalReply), info.messageID);
-      });
+      api.editMessage(formatFont(msg), info.messageID);
 
     } catch (err) {
-      console.error("Converter Error:", err);
-      const errMsg = "❌ Error: " + (err.response?.data?.message || err.message || "Something went wrong.");
-      api.editMessage(formatFont(errMsg), info.messageID);
+      console.error("Converter error:", err);
+      api.editMessage(formatFont("❌ Error: " + (err.message || "Unknown error.")), info.messageID);
     }
   });
 };
