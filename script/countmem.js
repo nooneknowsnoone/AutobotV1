@@ -7,7 +7,7 @@ module.exports.config = {
   credits: "Jibanyan",
   description: "Count all members in the current group chat, display their names, and optionally include the group's name and picture.",
   commandCategory: "Group Chat",
-  usages: "",
+  usages: "countmem",
   cooldowns: 0,
   hasPrefix: false
 };
