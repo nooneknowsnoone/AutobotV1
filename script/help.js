@@ -49,7 +49,7 @@ module.exports.run = async function ({ api, event, enableCommands, args, Utils, 
       helpMessage += `\n${formatFont(`Page ${page}/${Math.ceil(totalCommands / pages)}`)}.`;
       helpMessage += `\nType '${prefix}help <page>' to view more.`;
       helpMessage += `\nType '${prefix}help <command>' for command details.`;
-      helpMessage += `\n\n🛠️ Created by: autobot404.onrender.com`;
+      helpMessage += `\n\n🔗: chatbotcommunityltd-autobot.onrender.com`;
 
       return api.sendMessage(helpMessage, event.threadID, event.messageID);
     }
@@ -72,7 +72,7 @@ module.exports.run = async function ({ api, event, enableCommands, args, Utils, 
       helpMessage += `\n${formatFont(`Page ${page}/${Math.ceil(totalCommands / pages)}`)}.`;
       helpMessage += `\nType '${prefix}help <page>' to view more.`;
       helpMessage += `\nType '${prefix}help <command>' for command details.`;
-      helpMessage += `\n\n🛠️ Created by: autobot404.onrender.com`;
+      helpMessage += `\n\n🔗: chatbotcommunityltd-autobot.onrender.com`;
 
       return api.sendMessage(helpMessage, event.threadID, event.messageID);
     }
