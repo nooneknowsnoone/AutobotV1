@@ -1,55 +1,55 @@
-const axios = require('axios');
-const fs = require('fs');
+const axios = require("axios");
+const fs = require("fs-extra");
+const path = require("path");
 
 module.exports.config = {
   name: "welcome",
-  version: "1.0.0",
+  version: "1.0.0"
 };
 
 module.exports.handleEvent = async function ({ api, event }) {
-  if (event.logMessageType === "log:subscribe") {
+  if (event.logMessageType !== "log:subscribe") return;
+
+  try {
     const addedParticipants = event.logMessageData.addedParticipants;
-    const senderID = addedParticipants[0].userFbId;
+    const newMember = addedParticipants[0];
+    const userID = newMember.userFbId;
 
-    let name = await api.getUserInfo(senderID).then(info => info[senderID].name);
+    const userInfo = await api.getUserInfo(userID);
+    let name = userInfo[userID]?.name || "User";
 
-    // Truncate name if it's too long
-    const maxLength = 15;
-    if (name.length > maxLength) {
-      name = name.substring(0, maxLength - 3) + '...';
-    }
+    if (name.length > 15) name = name.slice(0, 12) + "...";
 
-    const groupInfo = await api.getThreadInfo(event.threadID);
-    const groupIcon = groupInfo.imageSrc || "https://i.ibb.co/G5mJZxs/rin.jpg";
-    const memberCount = groupInfo.participantIDs.length;
-    const groupName = groupInfo.threadName || "this group";
-    const background = groupInfo.imageSrc || "https://i.ibb.co/FkQMsQgG/494820034-1290485175939968-835018671615168300-n-jpg-nc-cat-103-ccb-1-7-nc-sid-fc17b8-nc-ohc-gtlt82-D.jpg";
+    const threadInfo = await api.getThreadInfo(event.threadID);
+    const groupName = threadInfo.threadName || "our group";
+    const memberCount = threadInfo.participantIDs.length;
 
-    const apiKey = "8062a9eb-2a2e-458b-a1f0-4cd25de8b000";
-    const avatarUrl = `https://api-canvass.vercel.app/profile?uid=${senderID}`;
+    const avatarUrl = `https://api-canvass.vercel.app/profile?uid=${userID}`;
+    const background = threadInfo.imageSrc || "https://i.ibb.co/4YBNyvP/images-76.jpg";
 
-    const welcomeUrl = `https://kaiz-apis.gleeze.com/api/welcome` +
+    // Build welcome image API URL
+    const apiUrl = `https://ace-rest-api.onrender.com/api/welcome` +
       `?username=${encodeURIComponent(name)}` +
       `&avatarUrl=${encodeURIComponent(avatarUrl)}` +
       `&groupname=${encodeURIComponent(groupName)}` +
       `&bg=${encodeURIComponent(background)}` +
-      `&memberCount=${memberCount}` +
-      `&apikey=${apiKey}`;
+      `&memberCount=${memberCount}`;
 
-    try {
-      const { data } = await axios.get(welcomeUrl, { responseType: 'arraybuffer' });
-      const filePath = './script/cache/welcome_image.jpg';
-      fs.writeFileSync(filePath, Buffer.from(data));
+    const response = await axios.get(apiUrl, { responseType: "arraybuffer" });
 
-      api.sendMessage({
-        body: `👋 Welcome ${name} to ${groupName}! 🎉`,
-        attachment: fs.createReadStream(filePath)
-      }, event.threadID, () => fs.unlinkSync(filePath));
-    } catch (error) {
-      console.error("❌ Error fetching welcome image:", error);
-      api.sendMessage({
-        body: `👋 Welcome ${name} to ${groupName}!`
-      }, event.threadID);
-    }
+    const imgPath = path.join(__dirname, "..", "cache", `welcome-${userID}.jpg`);
+    fs.ensureDirSync(path.dirname(imgPath));
+    fs.writeFileSync(imgPath, Buffer.from(response.data));
+
+    await api.sendMessage({
+      body: `👋 Welcome ${name} to ${groupName}! 🎉\nWe now have ${memberCount} members.`,
+      attachment: fs.createReadStream(imgPath)
+    }, event.threadID);
+
+    fs.unlinkSync(imgPath); // Cleanup
+
+  } catch (error) {
+    console.error("❌ Error in welcomenoti:", error.message || error);
+    api.sendMessage("👋 A new member joined the group.", event.threadID);
   }
 };
