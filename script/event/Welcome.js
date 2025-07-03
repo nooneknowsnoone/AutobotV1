@@ -2,7 +2,7 @@ const axios = require('axios');
 const fs = require('fs');
 
 module.exports.config = {
-    name: "welcomenoti",
+    name: "welcome",
     version: "1.0.0",
 };
 
