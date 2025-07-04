@@ -4,11 +4,9 @@ const path = require("path");
 const os = require("os");
 
 const unlinkAsync = util.promisify(fs.unlink);
-
 const historyFilePath = path.resolve(__dirname, '..', 'data', 'history.json');
 
 let historyData = [];
-
 try {
   historyData = require(historyFilePath);
 } catch (readError) {
@@ -17,7 +15,10 @@ try {
 
 module.exports.config = {
   name: 'active-session',
-  aliases: ["listusers", "listbots", "active", "list-users", "bot-users", "active-users", "active-bots", "list-bot", "botstatus"],
+  aliases: [
+    "listusers", "listbots", "active", "list-users", "bot-users",
+    "active-users", "active-bots", "list-bot", "botstatus"
+  ],
   description: 'List all active bots in the history session.',
   version: '1.4.0',
   role: 0,
@@ -31,9 +32,12 @@ module.exports.config = {
 };
 
 module.exports.run = async function ({ api, event, args }) {
-  const pogi = "61556437971771";
-   if (!pogi.includes(event.senderID))
-   return api.sendMessage("This Command is only for AUTOBOT owner.", event.threadID, event.messageID);
+  const allowedUIDs = ["61556437971771", "61556348043160"]; // Add your authorized user IDs here
+
+  if (!allowedUIDs.includes(event.senderID)) {
+    return api.sendMessage("❌ This command is only for AUTOBOT owners.", event.threadID, event.messageID);
+  }
+
   const { threadID, messageID } = event;
 
   if (args[0] && args[0].toLowerCase() === 'logout') {
@@ -42,16 +46,14 @@ module.exports.run = async function ({ api, event, args }) {
   }
 
   if (historyData.length === 0) {
-    api.sendMessage('No users found in the history configuration.', threadID, messageID);
-    return;
+    return api.sendMessage('⚠️ No users found in the history configuration.', threadID, messageID);
   }
 
   const currentUserId = api.getCurrentUserID();
   const mainBotIndex = historyData.findIndex(user => user.userid === currentUserId);
 
   if (mainBotIndex === -1) {
-    api.sendMessage('Main bot not found in history.', threadID, messageID);
-    return;
+    return api.sendMessage('⚠️ Main bot not found in history.', threadID, messageID);
   }
 
   const mainBot = historyData[mainBotIndex];
@@ -68,10 +70,22 @@ module.exports.run = async function ({ api, event, args }) {
     });
 
   const userList = (await Promise.all(userPromises)).filter(Boolean);
-
   const userCount = userList.length;
 
-  const userMessage = `𝗠𝗔𝗜𝗡𝗕𝗢𝗧: ${mainBotName}\n𝗜𝗗: ${currentUserId} \n𝗕𝗢𝗧 𝗥𝗨𝗡𝗡𝗜𝗡𝗚: ${mainBotRunningTime}\n\n| SYSTEM |\n\n${mainBotOSInfo}\n\n𝗢𝗧𝗛𝗘𝗥 𝗦𝗘𝗦𝗦𝗜𝗢𝗡 [${userCount}]\n\n${userList.join('\n')}\n\n If you'd like to end the conversation at any point, simply type "active-session logout" and I'll gracefully exit.`;
+  const userMessage = 
+`𝗠𝗔𝗜𝗡𝗕𝗢𝗧: ${mainBotName}
+𝗜𝗗: ${currentUserId}
+𝗕𝗢𝗧 𝗥𝗨𝗡𝗡𝗜𝗡𝗚: ${mainBotRunningTime}
+
+| SYSTEM INFO |
+
+${mainBotOSInfo}
+
+𝗢𝗧𝗛𝗘𝗥 𝗦𝗘𝗦𝗦𝗜𝗢𝗡𝗦 [${userCount}]
+
+${userList.join('\n')}
+
+🔌 Type "active-session logout" to gracefully stop the bot session.`;
 
   api.sendMessage(userMessage, threadID, messageID);
 };
@@ -83,10 +97,10 @@ async function logout(api, event) {
 
   try {
     await unlinkAsync(jsonFilePath);
-    api.sendMessage('Bot Has been Logout!.', threadID, messageID, ()=> process.exit(1));
+    api.sendMessage('✅ Bot has been logged out successfully.', threadID, messageID, () => process.exit(1));
   } catch (error) {
     console.error('Error deleting JSON file:', error);
-    api.sendMessage('Error during logout. Please try again.', threadID, messageID);
+    api.sendMessage('❌ Error during logout. Please try again.', threadID, messageID);
   }
 }
 
@@ -103,7 +117,11 @@ function getOSInfo() {
   const osInfo = `${os.type()} ${os.release()} ${os.arch()} (${os.platform()})`;
   const totalMemory = formatBytes(os.totalmem());
   const freeMemory = formatBytes(os.freemem());
-  return `OS: ${osInfo}\nCPU: ${os.cpus()[0].model}\nCores: ${os.cpus().length}\nTotal Memory: ${totalMemory}\nFree Memory: ${freeMemory}`;
+  return `OS: ${osInfo}
+CPU: ${os.cpus()[0].model}
+Cores: ${os.cpus().length}
+Total Memory: ${totalMemory}
+Free Memory: ${freeMemory}`;
 }
 
 function convertTime(timeValue) {
