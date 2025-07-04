@@ -3,7 +3,7 @@ const axios = require("axios");
 module.exports.config = {
   name: "join",
   version: "1.0.0",
-  role: w,
+  role: 2,
   credits: "Kshitiz",
   description: "Join the specified group chat",
   commandCategory: "System",
