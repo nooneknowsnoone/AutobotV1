@@ -151,7 +151,7 @@ module.exports.config = {
   aliases: [],
   description: "GAG tracker with favorite item alerting, global last seen, and shared WebSocket.",
   usage: "gagstock on | off | fav add Carrot | lastseen egg",
-  credits: "Ry",
+  credits: "Jerome Jamis",
   cooldown: 5,
 };
 
