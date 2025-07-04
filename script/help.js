@@ -1,28 +1,5 @@
-const fontEnabled = true;
-
-function formatFont(text) {
-  const fontMap = {
-    a: '𝖺', b: '𝖻', c: '𝖼', d: '𝖽', e: '𝖾', f: '𝖿', g: '𝗀', h: '𝗁', i: '𝗂', j: '𝗃', k: '𝗄', l: '𝗅', m: '𝗆',
-    n: '𝗇', o: '𝗈', p: '𝗉', q: '𝗊', r: '𝗋', s: '𝗌', t: '𝗍', u: '𝗎', v: '𝗏', w: '𝗐', x: '𝗑', y: '𝗒', z: '𝗓',
-    A: '𝖠', B: '𝖡', C: '𝖢', D: '𝖣', E: '𝖤', F: '𝖥', G: '𝖦', H: '𝖧', I: '𝖨', J: '𝖩', K: '𝖪', L: '𝖫', M: '𝖬',
-    N: '𝖭', O: '𝖮', P: '𝖯', Q: '𝖰', R: '𝖱', S: '𝖲', T: '𝖳', U: '𝖴', V: '𝖵', W: '𝖶', X: '𝖷', Y: '𝖸', Z: '𝖹'
-  };
-  return [...text].map(c => fontEnabled && fontMap[c] ? fontMap[c] : c).join('');
-}
-
-module.exports.config = {
-  name: 'help',
-  version: '1.0.0',
-  role: 0,
-  hasPrefix: true,
-  aliases: ['tulong'],
-  description: "Beginner's guide",
-  usage: "help [page] or [command]",
-  credits: 'Developer',
-};
-
 module.exports.run = async function ({ api, event, enableCommands, args, Utils, prefix }) {
-  const input = args.join(' ');
+  const input = args.join(' ').toLowerCase();
   const eventCommands = enableCommands[1].handleEvent;
   const commands = enableCommands[0].commands;
   const totalCommands = commands.length;
@@ -32,6 +9,25 @@ module.exports.run = async function ({ api, event, enableCommands, args, Utils, 
     const pages = 25;
     let page = 1;
 
+    // Show all commands if user types "all"
+    if (input === 'all') {
+      let helpMessage = `${formatFont('📃 All Commands')} (${totalCommands} total):\n\n`;
+      for (let i = 0; i < totalCommands; i++) {
+        helpMessage += `\t${i + 1}. 「 ${formatFont(prefix + commands[i])} 」\n`;
+      }
+
+      helpMessage += `\n${formatFont('📃 Event List')} (${totalEvents} total):\n\n`;
+      eventCommands.forEach((eventCommand, index) => {
+        helpMessage += `\t${index + 1}. 「 ${formatFont(prefix + eventCommand)} 」\n`;
+      });
+
+      helpMessage += `\nType '${prefix}help <command>' for command details.`;
+      helpMessage += `\n\n🔗: chatbotcommunityltd-autobot.onrender.com/automated_fba`;
+
+      return api.sendMessage(helpMessage, event.threadID, event.messageID);
+    }
+
+    // Default paginated view if no input
     if (!input) {
       const start = (page - 1) * pages;
       const end = start + pages;
@@ -54,6 +50,7 @@ module.exports.run = async function ({ api, event, enableCommands, args, Utils, 
       return api.sendMessage(helpMessage, event.threadID, event.messageID);
     }
 
+    // If input is a page number
     if (!isNaN(input)) {
       page = parseInt(input);
       const start = (page - 1) * pages;
@@ -77,6 +74,7 @@ module.exports.run = async function ({ api, event, enableCommands, args, Utils, 
       return api.sendMessage(helpMessage, event.threadID, event.messageID);
     }
 
+    // If input is a specific command
     const command = [...Utils.handleEvent, ...Utils.commands].find(([key]) =>
       key.includes(input.toLowerCase())
     )?.[1];
@@ -111,13 +109,5 @@ ${cooldown ? `➛ Cooldown: ${cooldown}s` : ''}`.trim();
   } catch (error) {
     console.error("Help Command Error:", error);
     return api.sendMessage("❌ An error occurred while loading help.", event.threadID, event.messageID);
-  }
-};
-
-module.exports.handleEvent = async function ({ api, event, prefix }) {
-  const { threadID, messageID, body } = event;
-  if (body?.toLowerCase().startsWith('prefix')) {
-    const message = prefix ? `This is my prefix: ${prefix}` : "Sorry, I don't have a prefix.";
-    return api.sendMessage(formatFont(message), threadID, messageID);
   }
 };
