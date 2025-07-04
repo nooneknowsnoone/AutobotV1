@@ -26,7 +26,7 @@ module.exports.run = async function({ api, event, args }) {
     if (err) return;
 
     try {
-      const url = `https://xvi-rest-api.vercel.app/api/mistral?prompt=${encodeURIComponent(prompt)}`;
+      const url = `https://x-free-apis-4-all.onrender.com/api/mistral?prompt=${encodeURIComponent(prompt)}`;
       const { data } = await axios.get(url);
 
       const responseText = data.response || "⚠️ No response from Mistral AI.";
