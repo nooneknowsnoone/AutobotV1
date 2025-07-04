@@ -23,7 +23,7 @@ module.exports.config = {
   role: 0,
   hasPrefix: false,
   aliases: ['gpt', 'gimage'],
-  description: "Analyze text or recognize image content using GPT-4.1",
+  description: "Analyze text or recognize image content using Gemini Vision",
   usage: "ai [question] or reply to an image",
   credits: 'Ry',
   cooldown: 3,
@@ -46,20 +46,35 @@ module.exports.run = async function ({ api, event, args }) {
 
     try {
       let imageUrl = "";
+      let responseText = "";
+
+      // Check if the user replied to an image
       if (event.messageReply?.attachments?.[0]?.type === 'photo') {
         imageUrl = event.messageReply.attachments[0].url;
+
+        // Use new Gemini Vision image recognition API
+        const { data } = await axios.get("https://kaiz-apis.gleeze.com/api/gemini-vision", {
+          params: {
+            q: "recognize",
+            uid: senderID,
+            imageUrl,
+            apikey: "bbcc44b9-4710-41c7-8034-fa2000ea7ae5"
+          }
+        });
+
+        responseText = data.response || "❌ No recognition result received.";
+      } else {
+        // Otherwise, treat as text prompt for Gemini/GPT-4.1
+        const { data } = await axios.get("https://kaiz-apis.gleeze.com/api/gpt-4.1", {
+          params: {
+            ask: finalPrompt,
+            uid: senderID,
+            apikey: "8062a9eb-2a2e-458b-a1f0-4cd25de8b000"
+          }
+        });
+
+        responseText = data.response || "❌ No response received from AI.";
       }
-
-      const { data } = await axios.get("https://kaiz-apis.gleeze.com/api/gpt-4.1", {
-        params: {
-          ask: finalPrompt,
-          uid: senderID,
-          imageUrl,
-          apikey: "8062a9eb-2a2e-458b-a1f0-4cd25de8b000"
-        }
-      });
-
-      const responseText = data.response || "❌ No response received from AI.";
 
       api.getUserInfo(senderID, (err, infoUser) => {
         const userName = infoUser?.[senderID]?.name || "Unknown User";
