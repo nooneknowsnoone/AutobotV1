@@ -6,7 +6,7 @@ module.exports.config = {
   name: "fbcover",
   version: "1.0.0",
   role: 0,
-  credits: "developer",
+  credits: "Ry",
   description: "Generates a Facebook cover using provided details.",
   hasPrefix: false,
   aliases: ["fbcover"],
@@ -33,7 +33,7 @@ module.exports.run = async function({ api, event, args }) {
     }
 
     const [name, subname, sdt, address, email, uid, color] = details.map(d => encodeURIComponent(d.trim()));
-    const apiUrl = `https://api.zetsu.xyz/canvas/fbcover?name=${name}&subname=${subname}&sdt=${sdt}&address=${address}&email=${email}&uid=${uid}&color=${color}&apikey=80836f3451c2b3392b832988e7b73cdb`;
+    const apiUrl = `https://api.zetsu.xyz/canvas/fbcover?name=${name}&subname=${subname}&sdt=${sdt}&address=${address}&email=${email}&uid=${uid}&color=${color}&apikey=6fbd0a144a296d257b30a752d4a178a5`;
     const imagePath = path.join(__dirname, "fbcover.png");
 
     api.sendMessage("Generating Facebook cover, please wait...", event.threadID);
