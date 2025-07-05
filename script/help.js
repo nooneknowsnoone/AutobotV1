@@ -34,19 +34,19 @@ module.exports.run = async function ({ api, event, enableCommands, args, Utils, 
 
     // Show ALL commands and events if input is "all"
     if (input === "all") {
-      let helpMessage = `${formatFont('📃 Command List')} (${totalCommands} total):\n\n`;
+      let helpMessage = `${formatFont('📃 Commands List')} (${totalCommands} total):\n\n`;
       commands.forEach((cmd, i) => {
         helpMessage += `\t${i + 1}. 「 ${formatFont(prefix + cmd)} 」\n`;
       });
 
-      helpMessage += `\n${formatFont('📃 Event List')} (${totalEvents} total):\n\n`;
+      helpMessage += `\n${formatFont('📃 Events List')} (${totalEvents} total):\n\n`;
       eventCommands.forEach((evt, i) => {
         helpMessage += `\t${i + 1}. 「 ${formatFont(prefix + evt)} 」\n`;
       });
 
       helpMessage += `\n${formatFont(`Page 1/1 (all shown)`)}.`;
       helpMessage += `\nType '${prefix}help <command>' for command details.`;
-      helpMessage += `\n\n🔗: chatbotcommunityltd-autobot.onrender.com/automated_fba`;
+      helpMessage += `\n\n🔗: https://sailor-autobot.onrender.com/automated_fba`;
 
       return api.sendMessage(helpMessage, event.threadID, event.messageID);
     }
@@ -55,13 +55,13 @@ module.exports.run = async function ({ api, event, enableCommands, args, Utils, 
     if (!input) {
       const start = (page - 1) * pages;
       const end = start + pages;
-      let helpMessage = `${formatFont('📃 Command List')} (${totalCommands} total):\n\n`;
+      let helpMessage = `${formatFont('📃 Commands List')} (${totalCommands} total):\n\n`;
 
       for (let i = start; i < Math.min(end, totalCommands); i++) {
         helpMessage += `\t${i + 1}. 「 ${formatFont(prefix + commands[i])} 」\n`;
       }
 
-      helpMessage += `\n${formatFont('📃 Event List')} (${totalEvents} total):\n\n`;
+      helpMessage += `\n${formatFont('📃 Events List')} (${totalEvents} total):\n\n`;
       eventCommands.forEach((eventCommand, index) => {
         helpMessage += `\t${index + 1}. 「 ${formatFont(prefix + eventCommand)} 」\n`;
       });
@@ -69,7 +69,7 @@ module.exports.run = async function ({ api, event, enableCommands, args, Utils, 
       helpMessage += `\n${formatFont(`Page ${page}/${Math.ceil(totalCommands / pages)}`)}.`;
       helpMessage += `\nType '${prefix}help <page>' to view more.`;
       helpMessage += `\nType '${prefix}help <command>' for command details.`;
-      helpMessage += `\n\n🔗: chatbotcommunityltd-autobot.onrender.com/automated_fba`;
+      helpMessage += `\n\n🔗: https://sailor-autobot.onrender.com/automated_fba`;
 
       return api.sendMessage(helpMessage, event.threadID, event.messageID);
     }
@@ -85,7 +85,7 @@ module.exports.run = async function ({ api, event, enableCommands, args, Utils, 
         helpMessage += `\t${i + 1}. 「 ${formatFont(prefix + commands[i])} 」\n`;
       }
 
-      helpMessage += `\n${formatFont('📃 Event List')} (${totalEvents} total):\n\n`;
+      helpMessage += `\n${formatFont('📃 Events List')} (${totalEvents} total):\n\n`;
       eventCommands.forEach((eventCommand, index) => {
         helpMessage += `\t${index + 1}. 「 ${formatFont(prefix + eventCommand)} 」\n`;
       });
@@ -93,7 +93,7 @@ module.exports.run = async function ({ api, event, enableCommands, args, Utils, 
       helpMessage += `\n${formatFont(`Page ${page}/${Math.ceil(totalCommands / pages)}`)}.`;
       helpMessage += `\nType '${prefix}help <page>' to view more.`;
       helpMessage += `\nType '${prefix}help <command>' for command details.`;
-      helpMessage += `\n\n🔗: chatbotcommunityltd-autobot.onrender.com/automated_fba`;
+      helpMessage += `\n\n🔗: https://sailor-autobot.onrender.com/automated_fba`;
 
       return api.sendMessage(helpMessage, event.threadID, event.messageID);
     }
