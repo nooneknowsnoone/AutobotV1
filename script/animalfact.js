@@ -22,36 +22,42 @@ module.exports.config = {
   version: "1.0.0",
   role: 0,
   hasPrefix: true,
-  aliases: ["afact", "factanimal"],
-  description: "Get a random animal fact!",
+  aliases: ["xfact"],
+  description: "Fetch a random animal fact!",
   usage: "animalfact",
-  credits: "Removed",
-  cooldown: 3,
+  credits: "Ry",
+  cooldown: 3
 };
 
 module.exports.run = async function ({ api, event }) {
   const threadID = event.threadID;
   const messageID = event.messageID;
 
-  await api.sendMessage(formatFont("🦁 Fetching an animal fact..."), threadID, messageID);
-
   try {
-    const response = await axios.get("https://api.zetsu.xyz/random/animal_fact", {
+    // Optional loading message
+    await api.sendMessage(formatFont("🦴 𝗙𝗲𝘁𝗰𝗵𝗶𝗻𝗴 𝗮𝗻 𝗮𝗻𝗶𝗺𝗮𝗹 𝗳𝗮𝗰𝘁..."), threadID, messageID);
+
+    const res = await axios.get("https://api.zetsu.xyz/random/animal_fact", {
       headers: {
-        apikey: "6fbd0a144a296d257b30a752d4a178a5"
+        Accept: "application/json",
+        "x-api-key": "6fbd0a144a296d257b30a752d4a178a5"
       }
     });
 
-    const { status, result } = response.data;
+    const fact = res.data?.result?.fact;
+    if (!fact) throw new Error("No fact found.");
 
-    if (!status || !result?.fact) {
-      return api.sendMessage(formatFont("❌ Failed to retrieve an animal fact."), threadID, messageID);
-    }
-
-    const message = `🐾 𝗔𝗻𝗶𝗺𝗮𝗹 𝗙𝗮𝗰𝘁\n\n${formatFont(result.fact)}`;
-    return api.sendMessage(message, threadID, messageID);
-  } catch (error) {
-    console.error("animalfact error:", error.message);
-    return api.sendMessage(formatFont(`⚠️ Error: ${error.message}`), threadID, messageID);
+    return api.sendMessage(
+      formatFont(`📚 𝗔𝗻𝗶𝗺𝗮𝗹 𝗙𝗮𝗰𝘁\n━━━━━━━━━━━━━━\n${fact}\n━━━━━━━━━━━━━━`),
+      threadID,
+      messageID
+    );
+  } catch (err) {
+    console.error("AnimalFact error:", err.message);
+    return api.sendMessage(
+      formatFont(`❌ 𝗘𝗿𝗿𝗼𝗿: 𝗨𝗻𝗮𝗯𝗹𝗲 𝘁𝗼 𝗴𝗲𝘁 𝗮 𝗳𝗮𝗰𝘁.\n${err.message}`),
+      threadID,
+      messageID
+    );
   }
 };
