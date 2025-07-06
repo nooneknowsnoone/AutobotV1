@@ -108,7 +108,7 @@ const birdFacts = [
   "Male birds often sing to attract mates.",
   "Birds preen to maintain their feathers.",
   "The secretary bird kills snakes by stomping on them.",
-  "Hornbills seal themselves in tree cavities when nesting.", [
+  "Hornbills seal themselves in tree cavities when nesting.", 
   "The male frigatebird inflates a red throat pouch to attract females.",
   "Hoopoes use their uropygial gland to produce a foul-smelling secretion.",
   "The common poorwill is the only bird known to hibernate.",
