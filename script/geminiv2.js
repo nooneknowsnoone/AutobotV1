@@ -48,7 +48,7 @@ module.exports.run = async function ({ api, event, args }) {
     try {
       const { data } = await axios.get("https://wildan-suldyir-apis.vercel.app/api/gemini-vision", {
         params: {
-          prompt: finalPrompt || 'who is this anime',
+          prompt: finalPrompt,
           imgUrl: imageUrl || ''
         }
       });
