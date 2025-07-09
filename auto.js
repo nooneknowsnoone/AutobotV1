@@ -119,6 +119,9 @@ const routes = [{
 }, {
   path: '/online_user',
   file: 'online.html'
+  }, (
+path: '/automated_fba',
+  file: 'autobot.html'
 }, ];
 routes.forEach(route => {
   app.get(route.path, (req, res) => {
