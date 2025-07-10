@@ -1,4 +1,4 @@
-dollmodule.exports.config = {
+module.exports.config = {
     name: "biden",
     version: "1.0.0",
     role: 0,
