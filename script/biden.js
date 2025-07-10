@@ -1,10 +1,10 @@
-module.exports.config = {
+dollmodule.exports.config = {
     name: "biden",
     version: "1.0.0",
     role: 0,
     credits: "Rized",  // Updated credit name
     description: "Generate a billboard image",
-    hasPrefix: false,
+    hasPrefix: true,
     aliases: ["jb", ,"joe"],
     usage: "[biden <text>]",
     cooldown: 5
