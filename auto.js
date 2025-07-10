@@ -284,9 +284,28 @@ async function accountLogin(state, enableCommands = [], prefix, admin = []) {
           let blacklist = (JSON.parse(fs.readFileSync('./data/history.json', 'utf-8')).find(blacklist => blacklist.userid === userid) || {}).blacklist || [];
           let hasPrefix = (event.body && aliases((event.body || '')?.trim().toLowerCase().split(/ +/).shift())?.hasPrefix == false) ? '' : prefix;
           let [command, ...args] = ((event.body || '').trim().toLowerCase().startsWith(hasPrefix?.toLowerCase()) ? (event.body || '').trim().substring(hasPrefix?.length).trim().split(/\s+/).map(arg => arg.trim()) : []);
-          const cmdData = aliases(command);
-if (cmdData && cmdData.hasPrefix === false && event.body?.startsWith(prefix)) {
-  return; // silently ignore, no warning or spam
+          let raw = (event.body || '').trim();
+let lower = raw.toLowerCase();
+let firstWord = lower.split(/\s+/)[0];
+let aliasData = aliases(firstWord.startsWith(prefix) ? firstWord.slice(prefix.length) : firstWord);
+
+let command = '';
+let args = [];
+
+if (aliasData) {
+  const cmdName = aliasData.name;
+  const needPrefix = aliasData.hasPrefix ?? true;
+
+  if (needPrefix && lower.startsWith(prefix)) {
+    command = lower.slice(prefix.length).trim().split(/\s+/)[0];
+    args = lower.slice(prefix.length).trim().split(/\s+/).slice(1);
+  } else if (!needPrefix && !lower.startsWith(prefix)) {
+    command = firstWord;
+    args = lower.split(/\s+/).slice(1);
+  } else if (!needPrefix && lower.startsWith(prefix)) {
+    api.sendMessage(`𝖨𝗇𝗏𝖺𝗅𝗂𝖽 𝗎𝗌𝖺𝗀𝖾 𝗍𝗁𝗂𝗌 𝖼𝗈𝗆𝗆𝖺𝗇𝖽 𝖽𝗈𝖾𝗌𝗇'𝗍 𝗇𝖾𝖾𝖽 𝖺 𝗉𝗋𝖾𝖿𝗂𝗑`, event.threadID, event.messageID);
+    return;
+  }
 }
           if (event.body && aliases(command)?.name) {
             const role = aliases(command)?.role ?? 0;
