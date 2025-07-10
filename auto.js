@@ -289,7 +289,6 @@ let lower = raw.toLowerCase();
 let firstWord = lower.split(/\s+/)[0];
 let aliasData = aliases(firstWord.startsWith(prefix) ? firstWord.slice(prefix.length) : firstWord);
 
-let command = '';
 let args = [];
 
 if (aliasData) {
