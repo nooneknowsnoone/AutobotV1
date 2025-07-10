@@ -289,6 +289,7 @@ let lower = raw.toLowerCase();
 let firstWord = lower.split(/\s+/)[0];
 let aliasData = aliases(firstWord.startsWith(prefix) ? firstWord.slice(prefix.length) : firstWord);
 
+let command = '';
 let args = [];
 
 if (aliasData) {
@@ -306,7 +307,7 @@ if (aliasData) {
     return;
   }
 }
-          if (event.body && aliases(command)?.name) {
+ aliases(command)?.name) {
             const role = aliases(command)?.role ?? 0;
             const isAdmin = config?.[0]?.masterKey?.admin?.includes(event.senderID) || admin.includes(event.senderID);
             const isThreadAdmin = isAdmin || ((Array.isArray(adminIDS) ? adminIDS.find(admin => Object.keys(admin)[0] === event.threadID) : {})?.[event.threadID] || []).some(admin => admin.id === event.senderID);
