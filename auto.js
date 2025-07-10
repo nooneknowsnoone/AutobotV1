@@ -287,19 +287,22 @@ async function accountLogin(state, enableCommands = [], prefix, admin = []) {
           let [command, ...args] = ((event.body || '').trim().toLowerCase().startsWith(hasPrefix?.toLowerCase()) ? (event.body || '').trim().substring(hasPrefix?.length).trim().split(/\s+/).map(arg => arg.trim()) : []);    
           const matchedCommand = aliases(command);
 
-// Prevent spam if command is valid and doesn't need prefix
+// If the command exists and hasPrefix is false, allow both usages (with/without prefix) — no error.
 if (
+  matchedCommand &&
+  matchedCommand.hasPrefix === false &&
+  !event.body?.toLowerCase().startsWith(prefix.toLowerCase())
+) {
+  // No prefix used, still valid — allow
+  command = matchedCommand.name;
+} else if (
   matchedCommand &&
   matchedCommand.hasPrefix === false &&
   event.body?.toLowerCase().startsWith(prefix.toLowerCase())
 ) {
-  api.sendMessage(
-    `𝖨𝗇𝗏𝖺𝗅𝗂𝖽 𝗎𝗌𝖺𝗀𝖾: 𝗍𝗁𝗂𝗌 𝖼𝗈𝗆𝗆𝖺𝗇𝖽 𝖽𝗈𝖾𝗌𝗇'𝗍 𝗇𝖾𝖾𝖽 𝖺 𝗉𝗋𝖾𝖿𝗂𝗑. 𝖳𝗋𝗒 𝗎𝗌𝗂𝗇𝗀 𝗂𝗍 𝗐𝗂𝗍𝗁𝗈𝗎𝗍 𝗍𝗁𝖾 "${prefix}" 𝗉𝗋𝖾𝖿𝗂𝗑.`,
-    event.threadID,
-    event.messageID
-  );
-  return;
-} 
+  // Prefix used on a no-prefix command — allow anyway, no spam
+  command = matchedCommand.name;
+}
           if (event.body && aliases(command)?.name) {    
             const role = aliases(command)?.role ?? 0;    
             const isAdmin = config?.[0]?.masterKey?.admin?.includes(event.senderID) || admin.includes(event.senderID);    
