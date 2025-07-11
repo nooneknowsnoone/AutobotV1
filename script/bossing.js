@@ -16,7 +16,7 @@ module.exports.config = {
   name: "bossing",
   version: "1.0.0",
   role: 0,
-  hasPrefix: false,
+  hasPrefix: true,
   aliases: [],
   description: "Interact with Bossing AI for text-based responses",
   usage: "bossing <ask>",
