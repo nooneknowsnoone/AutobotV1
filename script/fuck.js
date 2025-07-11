@@ -4,7 +4,7 @@ module.exports.config = {
     role: 0,
     credits: "Rized",
     description: "Generate a 'fuck' image using two Facebook user IDs",
-    hasPrefix: false,
+    hasPrefix: true,
     aliases: ["fuck"],
     usage: "[fuck <uid1> | <uid2>]",
     cooldown: 5
