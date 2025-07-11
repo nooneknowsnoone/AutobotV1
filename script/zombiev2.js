@@ -7,6 +7,7 @@ module.exports.config = {
   version: "1.0.0",
   role: 0,
   credits: "dev",
+  hasPrefix: true,
   aliases: [],
   usages: "< reply to image >",
   cooldown: 5,
