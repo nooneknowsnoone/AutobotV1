@@ -4,7 +4,7 @@ module.exports.config = {
     role: 0,
     credits: "Rized",  // Updated credit name
     description: "Generate a billboard image",
-    hasPrefix: false,
+    hasPrefix: true,
     aliases: ["billboard"],
     usage: "[billboard <text>]",
     cooldown: 5
