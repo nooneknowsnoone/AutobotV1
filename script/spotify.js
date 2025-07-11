@@ -6,7 +6,7 @@ module.exports.config = {
   name: "spotify",
   version: "1.0.0",
   role: 0,
-  hasPrefix: false,
+  hasPrefix: true,
   aliases: [],
   description: "Search and download Spotify track.",
   usage: "spotify [song name]",
