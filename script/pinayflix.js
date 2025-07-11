@@ -7,7 +7,7 @@ module.exports.config = {
   version: "1.1.0",
   role: 2,
   description: "Search and download PinayFlix videos by query.",
-  prefix: true,
+  hasPrefix: true,
   credits: "Ry",
   cooldowns: 10,
   category: "media",
