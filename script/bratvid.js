@@ -38,7 +38,7 @@ module.exports.run = async function ({ api, event, args }) {
 
         writer.on('finish', () => {
             api.sendMessage({
-                body: `Brat video for: "${text}"`,
+                body: `•Brat video for: "${text}"`,
                 attachment: fs.createReadStream(filePath)
             }, event.threadID, () => fs.unlinkSync(filePath), event.messageID);
         });
