@@ -8,6 +8,7 @@ module.exports.config = {
   aliases: ['imgfree'],
   description: 'Upload an image using freeimagehost API and get the hosted link',
   usage: '<reply to an image>',
+  hasPrefix: true,
   credits: 'Ry',
   cooldown: 3,
 };
