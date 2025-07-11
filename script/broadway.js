@@ -4,7 +4,7 @@ module.exports.config = {
     role: 0,    
     credits: "Rized",    
     description: "Generate a Broadway-themed image using a user ID",    
-    hasPrefix: false,    
+    hasPrefix: true,    
     aliases: ["broadway"],    
     usage: "[broadway <userid>]",    
     cooldown: 5    
