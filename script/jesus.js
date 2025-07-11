@@ -4,7 +4,7 @@ module.exports.config = {
     role: 0,
     credits: "Rized",
     description: "Generate a Jesus meme image with custom text",
-    hasPrefix: false,
+    hasPrefix: true,
     aliases: ["jesus"],
     usage: "[jesus <text>]",
     cooldown: 5
