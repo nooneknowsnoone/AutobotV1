@@ -8,7 +8,7 @@ module.exports.config = {
     role: 0,
     credits: "Rized",  // Updated credit name
     description: "Generate an alert meme image with your text",
-    hasPrefix: false,
+    hasPrefix: true,
     aliases: ["alert"],
     usage: "[alert <text>]",
     cooldown: 5
