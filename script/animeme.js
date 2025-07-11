@@ -5,7 +5,7 @@ module.exports.config = {
   version: "1.0.0",
   credits: "developer",
   description: "Get random anime memes from the Animemes subreddit.",
-  hasPrefix: false,
+  hasPrefix: true,
   cooldown: 5,
   aliases: ["animejoke", "animem"],
 };
