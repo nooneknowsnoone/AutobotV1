@@ -4,7 +4,7 @@ module.exports.config = {
   name: 'fact',
   version: '1.0.1',
   role: 0,
-  hasPrefix: false,
+  hasPrefix: true,
   aliases: [],
   description: 'Fetch a random interesting fact',
   usage: 'fact',
