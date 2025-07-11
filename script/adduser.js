@@ -4,7 +4,7 @@ module.exports.config = {
 	role: 0,
 	aliases: ["add"],
 	credits: "Yan Maglinte",
-  hasPrefix: true,
+      hasPrefix: true,
 	description: "Add user to group by id",
 	cooldown: 0,
 };
