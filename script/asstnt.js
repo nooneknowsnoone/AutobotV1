@@ -17,7 +17,7 @@ module.exports.config = {
   name: 'assistant',
   version: '1.0.2',
   role: 0,
-  hasPrefix: false,
+  hasPrefix: true,
   aliases: ['ask'],
   description: "Ask a question to Assistant (GPT-4.1)",
   usage: "assistant <question>",
