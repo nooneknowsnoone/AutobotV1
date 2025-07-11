@@ -25,7 +25,7 @@ module.exports.config = {
   usage: "claude <question>",
   cooldown: 3,
   role: 0,
-  hasPrefix: false,
+  hasPrefix: true,
   aliases: ["cl"],
 };
 
