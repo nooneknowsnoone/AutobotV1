@@ -4,7 +4,7 @@ module.exports.config = {
   name: 'dictionary',
   version: '1.0.0',
   role: 0,
-  hasPrefix: false,
+  hasPrefix: true,
   aliases: [],
   description: 'Look up word definitions using an online dictionary.',
   usage: 'dictionary <word>',
