@@ -6,7 +6,7 @@ module.exports.config = {
   name: "countryinfo",
   version: "1.0.0",
   role: 0,
-  hasPrefix: false,
+  hasPrefix: true,
   aliases: [],
   description: "Get detailed information about a country.",
   usage: "countryinfo {countryName}",
