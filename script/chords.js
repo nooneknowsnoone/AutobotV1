@@ -4,7 +4,7 @@ module.exports.config = {
   name: 'chords',
   version: '1.0.0',
   role: 0,
-  hasPrefix: false,
+  hasPrefix: true,
   aliases: [],
   description: 'Search for guitar chords by song title',
   usage: 'chords <song title>',
