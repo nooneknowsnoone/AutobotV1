@@ -282,15 +282,8 @@ async function accountLogin(state, enableCommands = [], prefix, admin = []) {
           let [command, ...args] = ((event.body || '').trim().toLowerCase().startsWith(hasPrefix?.toLowerCase()) ? (event.body || '').trim().substring(hasPrefix?.length).trim().split(/\s+/).map(arg => arg.trim()) : []);
           const matchedCommand = aliases(command);
 
-// Warn only if the command exists but should not have a prefix
 if (hasPrefix && matchedCommand && matchedCommand.hasPrefix === false) {
   api.sendMessage(`Invalid usage: the "${matchedCommand.name}" command doesn't need a prefix.`, event.threadID, event.messageID);
-  return;
-}
-
-// Handle unknown commands gracefully
-if (event.body && !matchedCommand && event.body?.toLowerCase().startsWith(prefix.toLowerCase())) {
-  api.sendMessage(`Invalid command '${command}'. Use ${prefix}help to see the list of available commands.`, event.threadID, event.messageID);
   return;
 }
           if (event.body && aliases(command)?.name) {
