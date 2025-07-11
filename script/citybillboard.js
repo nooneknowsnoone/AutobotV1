@@ -4,7 +4,7 @@ module.exports.config = {
     role: 0,
     credits: "Rized",
     description: "Generate a city billboard image using Facebook user ID",
-    hasPrefix: false,
+    hasPrefix: true,
     aliases: ["citybillboard"],
     usage: "[citybillboard <uid>]",
     cooldown: 5
