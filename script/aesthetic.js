@@ -4,7 +4,7 @@ module.exports.config = {
     role: 0,    
     credits: "Rized",    
     description: "Generate an aesthetic image with custom text and author (color: black or white only)",    
-    hasPrefix: false,    
+    hasPrefix: true,    
     aliases: ["aesthetic"],    
     usage: "[aesthetic <text> | <author> | <black|white>]",    
     cooldown: 5    
