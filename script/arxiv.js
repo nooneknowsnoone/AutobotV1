@@ -4,7 +4,7 @@ module.exports.config = {
   name: 'arxiv',
   version: '1.0.0',
   role: 0,
-  hasPrefix: false,
+  hasPrefix: true,
   aliases: [],
   description: 'Fetch article from arXiv',
   usage: 'arxiv <word>',
