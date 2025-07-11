@@ -8,7 +8,7 @@ module.exports.config = {
     role: 0,
     credits: "developer",
     description: "Fetch GitHub profile info using username",
-    hasPrefix: false,
+    hasPrefix: true,
     aliases: ["gh", "gitinfo"],
     usage: "[githubinfo <username>]",
     cooldown: 5
