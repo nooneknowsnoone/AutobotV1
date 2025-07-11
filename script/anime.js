@@ -5,7 +5,7 @@ module.exports.config = {
   version: "1.0.0",
   credits: "Original Developer",
   description: "Get a random anime character with image.",
-  hasPrefix: false,
+  hasPrefix: true,
   cooldown: 5,
   aliases: ["animechar", "animeface"]
 };
