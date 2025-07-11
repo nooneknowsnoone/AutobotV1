@@ -28,6 +28,7 @@ module.exports.config = {
   name: "aria",
   version: "1.1.0",
   credits: "dev (rest api)",
+  hasPrefix: true,
   description: "Ask Opera Aria AI anything.",
   usage: "aria <question>",
   cooldown: 3,
