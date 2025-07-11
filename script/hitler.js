@@ -4,7 +4,7 @@ module.exports.config = {
     role: 0,    
     credits: "Rized",    
     description: "Generate a Hitler-themed meme image using a user ID",    
-    hasPrefix: false,    
+    hasPrefix: true,    
     aliases: ["hitler"],    
     usage: "[hitler <userid>]",    
     cooldown: 5    
