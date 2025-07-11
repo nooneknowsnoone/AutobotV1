@@ -6,7 +6,7 @@ module.exports.config = {
   role: 2,
   credits: "developer",
   description: "Fetches a random Hentai GIF.",
-  hasPrefix: false,
+  hasPrefix: true,
   cooldown: 5,
   aliases: ["hgif"],
 };
