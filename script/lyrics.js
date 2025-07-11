@@ -6,7 +6,7 @@ module.exports.config = {
   name: "lyrics",
   version: "1.0.0",
   role: 0,
-  hasPrefix: false,
+  hasPrefix: true,
   aliases: [],
   description: "Get song lyrics by title using Shazam.",
   usage: "lyrics [song title]",
