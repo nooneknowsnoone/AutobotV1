@@ -9,8 +9,7 @@ module.exports.config = {
   description: "Count all members in the current group chat, display their names, and optionally include the group's name and picture.",
   commandCategory: "Group Chat",
   usages: "countmem",
-  cooldowns: 0,
-  hasPrefix: false
+  cooldowns: 5
 };
 
 module.exports.run = async function({ api, event, args }) {
