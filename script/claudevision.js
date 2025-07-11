@@ -21,7 +21,7 @@ module.exports.config = {
   name: 'claudevision',
   version: '1.0.3',
   role: 0,
-  hasPrefix: false,
+  hasPrefix: true,
   aliases: ['cv', 'claude'],
   description: "Analyze prompt (optionally with image) using Claude 4 Pro Vision",
   usage: "claudevision [prompt] or reply to an image",
