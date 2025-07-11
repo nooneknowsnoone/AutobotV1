@@ -9,6 +9,7 @@ module.exports.config = {
   description: "Get a random piece of advice.",
   usage: "advice",
   credits: "developer",
+  hasPrefix: true,
   cooldown: 3,
 };
 
