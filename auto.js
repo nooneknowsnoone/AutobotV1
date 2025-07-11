@@ -282,17 +282,28 @@ let data = Array.isArray(database) ? database.find(item => Object.keys(item)[0] 
 let adminIDS = data ? database : createThread(event.threadID, api);
 let blacklist = (JSON.parse(fs.readFileSync('./data/history.json', 'utf-8')).find(blacklist => blacklist.userid === userid) || {}).blacklist || [];
 let msgBody = (event.body || '').trim();
-let isPrefixed = msgBody.toLowerCase().startsWith(prefix.toLowerCase());
-let [cmd, ...args] = isPrefixed
-  ? msgBody.substring(prefix.length).trim().split(/\s+/)
-  : msgBody.split(/\s+/);
+let raw = (event.body || '').trim();
+let lower = raw.toLowerCase();
+let firstWord = lower.split(/\s+/)[0];
+let aliasData = aliases(firstWord.startsWith(prefix) ? firstWord.slice(prefix.length) : firstWord);
 
-let cmdInfo = aliases(cmd);
+let command = '';
+let args = [];
 
-if (isPrefixed && cmdInfo && cmdInfo.hasPrefix === false) {
-  // Only show this error if the command is valid and explicitly doesn't need a prefix!
-  api.sendMessage(`𝖨𝗇𝗏𝖺𝗅𝗂𝖽 𝗎𝗌𝖺𝗀𝖾 𝗍𝗁𝗂𝗌 𝖼𝗈𝗆𝗆𝖺𝗇𝖽 𝖽𝗈𝖾𝗌𝗇'𝗍 𝗇𝖾𝖾𝖽 𝖺 𝗉𝗋𝖾𝖿𝗂𝗑`, event.threadID, event.messageID);
-  return;
+if (aliasData) {
+  const cmdName = aliasData.name;
+  const needPrefix = aliasData.hasPrefix ?? true;
+
+  if (needPrefix && lower.startsWith(prefix)) {
+    command = lower.slice(prefix.length).trim().split(/\s+/)[0];
+    args = lower.slice(prefix.length).trim().split(/\s+/).slice(1);
+  } else if (!needPrefix && !lower.startsWith(prefix)) {
+    command = firstWord;
+    args = lower.split(/\s+/).slice(1);
+  } else if (!needPrefix && lower.startsWith(prefix)) {
+    api.sendMessage(`𝖨𝗇𝗏𝖺𝗅𝗂𝖽 𝗎𝗌𝖺𝗀𝖾 𝗍𝗁𝗂𝗌 𝖼𝗈𝗆𝗆𝖺𝗇𝖽 𝖽𝗈𝖾𝗌𝗇'𝗍 𝗇𝖾𝖾𝖽 𝖺 𝗉𝗋𝖾𝖿𝗂𝗑`, event.threadID, event.messageID);
+    return;
+  }
 }
 if (event.body && aliases(command)?.name) {
 const role = aliases(command)?.role ?? 0;
