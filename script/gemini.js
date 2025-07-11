@@ -21,7 +21,7 @@ module.exports.config = {
   name: 'gemini',
   version: '1.0.1',
   role: 0,
-  hasPrefix: false,
+  hasPrefix: true,
   aliases: ['gvision', 'gimage'],
   description: "Analyze question or image using Gemini Vision AI",
   usage: "gemini [question] or reply to an image",
