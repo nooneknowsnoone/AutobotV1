@@ -6,7 +6,7 @@ module.exports.config = {
     role: 0,
     credits: "Rized",  // Updated credit name
     description: "Search for a movie's IMDb details",
-    hasPrefix: false,
+    hasPrefix: true,
     aliases: ["movie", "film"],
     usage: "[imdb <movie name>]",
     cooldown: 5
