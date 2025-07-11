@@ -37,7 +37,7 @@ module.exports.config = {
   version: "1.0.1",
   role: 0,
   credits: "Developer",
-  hasPrefix: false,
+  hasPrefix: true,
   description: "Report bot's error to admin or comment",
   cooldown: 10
 };
