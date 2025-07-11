@@ -4,7 +4,7 @@ module.exports.config = {
     role: 0,
     credits: "Rized",
     description: "Generate London gallery image from Facebook UID",
-    hasPrefix: false,
+    hasPrefix: true,
     aliases: ["london"],
     usage: "[london <uid>]",
     cooldown: 5
