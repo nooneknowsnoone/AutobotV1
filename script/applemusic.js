@@ -6,7 +6,7 @@ module.exports.config = {
   name: "applemusic",
   version: "1.0.0",
   role: 0,
-  hasPrefix: false,
+  hasPrefix: true,
   aliases: [],
   description: "Search Apple Music track and play preview.",
   usage: "applemusic [song name]",
