@@ -6,7 +6,7 @@ module.exports.config = {
   name: "avatar",
   version: "1.0.0",
   role: 2, // Admin only
-  hasPrefix: false,
+  hasPrefix: true,
   aliases: [],
   description: "Change bot avatar using an image URL or by replying to an image.",
   usage: "avatar <image_url> or reply to an image",
