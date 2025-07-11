@@ -41,9 +41,10 @@ module.exports.run = async function ({ api, event, args }) {
 module.exports.config = {
   name: 'law',
   version: '1.0.0',
-  hasPermission: 0,
-  credits: 'converted by ChatGPT',
+  role: 0,
+  credits: 'Ry',
   description: 'Get a law from the 48 Laws of Power.',
+  hasPrefix: true,
   usage: 'law [1-48]',
   cooldown: 3
 };
