@@ -5,7 +5,7 @@ module.exports.config = {
   version: "1.0.0",
   credits: "developer",
   description: "Generates an AI image using DALL·E from a given prompt.",
-  hasPrefix: false,
+  hasPrefix: true,
   cooldown: 5,
   aliases: ["dalleimage", "genimage"],
 };
