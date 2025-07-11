@@ -5,7 +5,7 @@ module.exports.config = {
   version: "1.0.0",
   credits: "Ry",
   description: "Generates an anime-style image based on the provided prompt.",
-  hasPrefix: false,
+  hasPrefix: true,
   cooldown: 5,
   aliases: ["animegen", "aimg"],
 };
