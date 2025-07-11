@@ -16,7 +16,7 @@ module.exports.config = {
   name: 'chipkura',
   version: '1.0.0',
   role: 0,
-  hasPrefix: false,
+  hasPrefix: true,
   aliases: ['ckura', 'chip'],
   description: "Image content recognizer via Chipkura API",
   usage: "chipkura [message] (use with image reply)",
