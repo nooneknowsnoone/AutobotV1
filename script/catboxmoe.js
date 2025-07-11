@@ -6,8 +6,9 @@ module.exports.config = {
   version: '1.0.0',
   role: 0,
   aliases: ['catbox', 'moehost'],
-  description: 'Upload an image to Catbox.moe with expiration using Kaiz API.',
+  description: 'Upload an image to Catbox.moe with expiration.',
   usage: '<reply to an image> [expiration: 1h|12h|24h|72h]',
+  hasPrefix: true,
   credits: 'Ry',
   cooldown: 3,
 };
