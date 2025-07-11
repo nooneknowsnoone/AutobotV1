@@ -16,7 +16,7 @@ module.exports.config = {
   name: 'gemma',
   version: '1.0.0',
   role: 0,
-  hasPrefix: false,
+  hasPrefix: true,
   aliases: ['g3n', 'gemma3n'],
   description: "Talk with Gemma 3n AI model",
   usage: "gemma [your message]",
