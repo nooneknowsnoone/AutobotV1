@@ -5,7 +5,7 @@ module.exports.config = {
   version: "1.0.0",
   credits: "developer",
   description: "Generates an AI image using the Flux model based on the provided prompt.",
-  hasPrefix: false,
+  hasPrefix: true,
   cooldown: 5,
   aliases: ["fluximage"],
 };
