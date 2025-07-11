@@ -8,7 +8,7 @@ module.exports.config = {
     role: 0,
     credits: "developer",
     description: "Generates a Drake meme with two custom texts.",
-    hasPrefix: false,
+    hasPrefix: true,
     aliases: ["drake"],
     usage: "[drake <text1> | <text2>]",
     cooldown: 5
