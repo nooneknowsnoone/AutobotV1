@@ -4,7 +4,7 @@ module.exports.config = {
   name: "book",
   version: "1.0.0",
   role: 0,
-  hasPrefix: false,
+  hasPrefix: true,
   aliases: [],
   description: "Search for books by title and get their links and ratings.",
   usage: "book <title>",
