@@ -120,7 +120,7 @@ const routes = [{
   path: '/online_user',
   file: 'online.html'
 }, {
-  path: '/automated_fba',
+  path: '/site',
   file: 'autobot.html'
 }, ];
 routes.forEach(route => {
