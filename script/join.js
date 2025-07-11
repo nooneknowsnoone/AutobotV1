@@ -9,7 +9,7 @@ module.exports.config = {
   commandCategory: "System",
   usages: "[threadID]",
   cooldowns: 0,
-  hasPrefix: false
+  hasPrefix: true
 };
 
 module.exports.run = async function({ api, event, args }) {
