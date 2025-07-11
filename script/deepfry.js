@@ -4,7 +4,7 @@ module.exports.config = {
     role: 0,
     credits: "Rized",
     description: "Generate a deepfry meme from a user ID",
-    hasPrefix: false,
+    hasPrefix: true,
     aliases: ["deepfry"],
     usage: "[deepfry <userid>]",
     cooldown: 5
