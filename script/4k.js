@@ -8,6 +8,7 @@ module.exports.config = {
   role: 0,
   credits: "Jieunn", 
   aliases: [],
+  hasPrefix: true,
   usages: "<reply to image>",
   cooldown: 5,
 };
