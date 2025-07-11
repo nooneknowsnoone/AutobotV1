@@ -2,11 +2,11 @@ module.exports.config = {
   name: "changebio",
   version: "1.7.0",
   role: 2, // Bot admin only
-  hasPrefix: false,
+  hasPrefix: true,
   aliases: [],
   description: "Change the bot's bio text.",
   usage: "changebio <new bio>",
-  credits: "Arn",
+  credits: "Ry",
   cooldown: 5,
 };
 
@@ -21,7 +21,7 @@ module.exports.run = async function ({ api, event, args }) {
 
   try {
     await api.changeBio(newBio);
-    return api.sendMessage(`✅ Bot bio successfully changed to:\n📝 "${newBio}"`, threadID, messageID);
+    return api.sendMessage(`✅ Bot bio successfully changed.`, threadID, messageID);
   } catch (error) {
     console.error("❌ Failed to change bot bio:", error);
     return api.sendMessage(
