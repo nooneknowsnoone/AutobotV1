@@ -28,7 +28,7 @@ module.exports.config = {
   description: "delete file",
   aliases: ["del"],
   usages: "{p}delete {filename}",
-  hasPrefix: false,
+  hasPrefix: true,
   cooldown: 5,
 };
 
