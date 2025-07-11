@@ -1,4 +1,4 @@
-fix code because spamming Invalid usage this command doesn't need a prefix
+
 
 const fs = require('fs');
 const path = require('path');
