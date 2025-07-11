@@ -2,7 +2,7 @@ fix code because spamming Invalid usage this command doesn't need a prefix
 
 const fs = require('fs');
 const path = require('path');
-const login = require('./fb-chat-api/index');
+const login = require('ws3-fca');
 const express = require('express');
 const port = process.env.PORT || 3000;
 const app = express();
@@ -123,8 +123,8 @@ file: 'guide.html'
 path: '/online_user',
 file: 'online.html'
 }, {
-path: '/tos-privacy-policy',
-file: 'tos-privacy-policy.html'
+path: '/automated_fba',
+file: 'autobot.html'
 }, ];
 routes.forEach(route => {
 app.get(route.path, (req, res) => {
