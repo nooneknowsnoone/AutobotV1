@@ -24,7 +24,7 @@ module.exports.config = {
   role: 0,
   cooldown: 0,
   credits: "DEVELOPER",
-  hasPrefix: false,
+  hasPrefix: true,
   usage: "active-session",
   dependencies: {
     "process": ""
