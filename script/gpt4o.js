@@ -43,7 +43,7 @@ module.exports.run = async function ({ api, event, args }) {
           ask: prompt,
           uid: senderID,
           roleplay: "Smart Assistant",
-          api_key: "4c756515a406d4ffafae6d6b06dcaeb8017b3634df0c07661a508b5b6a585df4"
+          api_key: "f4a2fb31166ad43608b9a3aa4195ae1491ab497b3bead8ca77699afb5d149a6d"
         }
       });
 
