@@ -1,52 +1,84 @@
-const axios = require('axios');
+const axios = require("axios");
+const fs = require("fs");
+const path = require("path");
 
 module.exports.config = {
   name: "pinterest",
   version: "1.0.0",
-  credits: "developer",
+  role: 0,
+  credits: "Kayden",
   description: "Searches and streams images from Pinterest",
-  hasPrefix: false,
-  cooldown: 5,
+  hasPrefix: true,
   aliases: ["pin"],
+  usage: "pinterest <keyword> - <limit>",
+  cooldown: 5,
 };
 
 module.exports.run = async function ({ api, event, args }) {
   try {
-    let input = args.join(" ");
+    const input = args.join(" ");
     if (!input.includes(" - ")) {
-      return api.sendMessage("Usage: pinterest <keyword> - <limit>\nExample: pinterest cat - 5", event.threadID, event.messageID);
+      return api.sendMessage(
+        "❌ Usage: pinterest <keyword> - <limit>\nExample: pinterest cat - 5",
+        event.threadID,
+        event.messageID
+      );
     }
 
     const [keyword, limit] = input.split(" - ");
     const count = parseInt(limit.trim());
 
     if (!keyword || isNaN(count) || count < 1 || count > 30) {
-      return api.sendMessage("❌ Please provide a valid keyword and a number between 1–30.\nExample: pinterest anime - 10", event.threadID, event.messageID);
+      return api.sendMessage(
+        "❌ Please provide a valid keyword and a number between 1–30.\nExample: pinterest anime - 10",
+        event.threadID,
+        event.messageID
+      );
     }
 
-    api.sendMessage(`🔍 Searching "${keyword.trim()}" (${count} images)...`, event.threadID, async () => {
-      try {
-        const apiUrl = `https://ccprojectsapis.zetsu.xyz/api/pin?title=${encodeURIComponent(keyword.trim())}&count=${count}`;
-        const response = await axios.get(apiUrl);
-        const images = response.data.data;
+    api.sendMessage(
+      `🔍 Searching Pinterest for "${keyword.trim()}" (${count} images)...`,
+      event.threadID
+    );
 
-        if (!images || images.length === 0) {
-          return api.sendMessage(`No results found for "${keyword.trim()}".`, event.threadID, event.messageID);
-        }
+    const apiUrl = `https://ccprojectsapis.zetsu.xyz/api/pin?title=${encodeURIComponent(keyword.trim())}&count=${count}`;
+    const response = await axios.get(apiUrl);
+    const images = response.data.data;
 
-        for (const url of images.slice(0, count)) {
-          const imgStream = await axios.get(url, { responseType: 'stream' });
-          await api.sendMessage({
-            attachment: imgStream.data
-          }, event.threadID);
-        }
+    if (!images || images.length === 0) {
+      return api.sendMessage(
+        `❌ No results found for "${keyword.trim()}".`,
+        event.threadID
+      );
+    }
 
-      } catch (error) {
-        console.error("Pinterest stream error:", error);
-        api.sendMessage("❌ An error occurred while retrieving or sending images.", event.threadID);
+    const imagePaths = [];
+
+    for (let i = 0; i < Math.min(count, images.length); i++) {
+      const url = images[i];
+      const imageRes = await axios.get(url, { responseType: "arraybuffer" });
+      const imgPath = path.join(__dirname, `pin_${i}.jpg`);
+      fs.writeFileSync(imgPath, imageRes.data);
+      imagePaths.push(imgPath);
+    }
+
+    const attachments = imagePaths.map(imgPath => fs.createReadStream(imgPath));
+
+    api.sendMessage(
+      {
+        body: `✅ Here are ${attachments.length} result(s) for "${keyword.trim()}"`,
+        attachment: attachments,
+      },
+      event.threadID,
+      () => {
+        imagePaths.forEach(p => fs.unlinkSync(p));
       }
-    });
-  } catch (err) {
-    api.sendMessage(err.message, event.threadID);
+    );
+  } catch (error) {
+    console.error("Pinterest command error:", error);
+    api.sendMessage(
+      "❌ An error occurred while fetching or sending the images.",
+      event.threadID
+    );
   }
 };
