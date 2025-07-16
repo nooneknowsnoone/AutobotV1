@@ -123,7 +123,7 @@ const routes = [{
   path: '/site',
   file: 'autobot.html'
 }, {
-  path: '/Autoshare',
+  path: '/autoshare',
   file: 'autoshare.html'
 }, ];
 routes.forEach(route => {
