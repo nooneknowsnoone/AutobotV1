@@ -16,10 +16,10 @@ module.exports.config = {
 module.exports.run = async function ({ api, event, args }) {
     const text = args.join(" ");
     if (!text) {
-        return api.sendMessage('Please provide text after "bratvid" to generate the video.', event.threadID, event.messageID);
+        return api.sendMessage('❌ Please provide text after "bratvid" to generate the video.', event.threadID, event.messageID);
     }
 
-    api.sendMessage('Generating video, please wait...', event.threadID, event.messageID);
+    api.sendMessage('⏳ Generating brat video, please wait...', event.threadID, event.messageID);
 
     const encodedText = encodeURIComponent(text);
     const videoUrl = `https://api.ferdev.my.id/maker/bratvid?text=${encodedText}&apikey=lain-lain`;
@@ -30,7 +30,10 @@ module.exports.run = async function ({ api, event, args }) {
         const response = await axios({
             url: videoUrl,
             method: 'GET',
-            responseType: 'stream'
+            responseType: 'stream',
+            headers: {
+                "Content-Type": "video/mp4"
+            }
         });
 
         const writer = fs.createWriteStream(filePath);
@@ -38,17 +41,17 @@ module.exports.run = async function ({ api, event, args }) {
 
         writer.on('finish', () => {
             api.sendMessage({
-                body: `•Brat video for: "${text}"`,
+                body: `🎬 Brat video for: "${text}"`,
                 attachment: fs.createReadStream(filePath)
             }, event.threadID, () => fs.unlinkSync(filePath), event.messageID);
         });
 
         writer.on('error', () => {
-            api.sendMessage('Error writing video file. Try again.', event.threadID, event.messageID);
+            api.sendMessage('❌ Error writing video file. Try again.', event.threadID, event.messageID);
         });
 
     } catch (error) {
-        console.error('Bratvid error:', error);
-        return api.sendMessage('Failed to generate brat video. Please try again later.', event.threadID, event.messageID);
+        console.error('❌ Bratvid error:', error);
+        return api.sendMessage('❌ Failed to generate brat video. Please try again later.', event.threadID, event.messageID);
     }
 };
