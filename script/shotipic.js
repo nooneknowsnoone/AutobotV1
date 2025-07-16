@@ -3,65 +3,62 @@ const fs = require("fs");
 const path = require("path");
 
 module.exports.config = {
-    name: "shotipic",
-    version: "1.0.0",
-    role: 0,
-    credits: "Ry",
-    description: "Send random Shoti images",
-    hasPrefix: false,
-    aliases: [],
-    usage: "[shotipic]",
-    cooldown: 5
+  name: "shotipic",
+  version: "1.0.0",
+  role: 0,
+  credits: "Ry",
+  description: "Send random Shoti images",
+  hasPrefix: false,
+  aliases: [],
+  usage: "[shotipic]",
+  cooldown: 5
 };
 
 module.exports.run = async function ({ api, event }) {
-    const { threadID, messageID } = event;
+  const { threadID } = event;
+  const apiUrl = "https://shoti.fbbot.org/api/get-shoti?type=image";
+  const headers = {
+    apikey: "shoti-e5ea61f538",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Gecko/20100101 Firefox/115.0"
+  };
 
-    try {
-        const apiUrl = 'https://shoti.fbbot.org/api/get-shoti?type=image';
-        const headers = {
-            'apikey': 'shoti-e5ea61f538',
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Gecko/20100101 Firefox/115.0'
-        };
+  try {
+    api.sendMessage("📸 Fetching Shoti images, please wait...", threadID);
 
-        const res = await axios.get(apiUrl, { headers });
-        const data = res.data?.result;
+    const response = await axios.get(apiUrl, { headers });
+    const images = response.data?.result?.content;
 
-        if (!data || !data.content || data.content.length === 0) {
-            return api.sendMessage("❌ No Shoti images found.", threadID, messageID);
-        }
-
-        for (const imageUrl of data.content) {
-            const filename = `shotipic_${Date.now()}.jpg`;
-            const filePath = path.join(__dirname, filename);
-
-            const imageResponse = await axios({
-                url: imageUrl,
-                method: "GET",
-                responseType: "stream"
-            });
-
-            const writer = fs.createWriteStream(filePath);
-            imageResponse.data.pipe(writer);
-
-            await new Promise((resolve, reject) => {
-                writer.on("finish", resolve);
-                writer.on("error", reject);
-            });
-
-            await api.sendMessage(
-                { attachment: fs.createReadStream(filePath) },
-                threadID
-            );
-
-            fs.unlinkSync(filePath);
-        }
-
-    } catch (error) {
-        console.error("ShotiPic Command Error:", error);
-        api.sendMessage(
-            `❌ Failed to retrieve Shoti images.\nError: ${error.message || error}`,
-            threadID
-        );
+    if (!images || images.length === 0) {
+      return api.sendMessage("❌ No Shoti images found.", threadID);
     }
+
+    const imagePaths = [];
+
+    for (let i = 0; i < images.length; i++) {
+      const url = images[i];
+      const imageRes = await axios.get(url, { responseType: "arraybuffer" });
+      const imagePath = path.join(__dirname, `shotipic_${i}.jpg`);
+      fs.writeFileSync(imagePath, imageRes.data);
+      imagePaths.push(imagePath);
+    }
+
+    const attachments = imagePaths.map(img => fs.createReadStream(img));
+
+    api.sendMessage(
+      {
+        body: `✅ Here ${attachments.length > 1 ? "are your Shoti images!" : "is your Shoti image!"}`,
+        attachment: attachments
+      },
+      threadID,
+      () => {
+        imagePaths.forEach(p => fs.unlinkSync(p));
+      }
+    );
+  } catch (error) {
+    console.error("ShotiPic Command Error:", error);
+    api.sendMessage(
+      `❌ Failed to retrieve Shoti images.\nError: ${error.message || error}`,
+      threadID
+    );
+  }
 };
