@@ -4,49 +4,47 @@ module.exports.config = {
   name: "slogan",
   version: "1.0.0",
   role: 0,
+  credits: "Jayy Cierco",
+  description: "Generate a marketing slogan using PinoyGPT API",
+  usage: "slogan [keyword]",
   hasPrefix: false,
-  aliases: ["tagline", "makeslogan"],
-  description: "Generate a catchy slogan using PinoyGPT",
-  usage: "slogan [product or brand name]",
-  credits: "Ru",
-  cooldown: 3
+  cooldown: 3,
 };
 
 module.exports.run = async function ({ api, event, args }) {
-  const threadID = event.threadID;
-  const messageID = event.messageID;
-  const input = args.join(" ").trim();
+  const keyword = args.join(" ").trim();
+  const { threadID, messageID, senderID } = event;
 
-  if (!input) {
-    return api.sendMessage("❌ Please provide a product or brand name.\nExample: slogan ChatGPT", threadID, messageID);
+  if (!keyword) {
+    return api.sendMessage("❌ Please provide a keyword or brand name.\n\nExample:\nslogan coffee", threadID, messageID);
   }
 
-  const processing = await api.sendMessage("🧠 Generating slogan...", threadID);
+  const loadingMsg = await api.sendMessage("🔄 Generating slogan...", threadID);
 
   try {
     const response = await axios.post(
       "https://www.pinoygpt.com/api/generate_slogan.php",
-      new URLSearchParams({ prompt: input }),
+      new URLSearchParams({ keyword }),
       { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
     );
 
-    // Attempt to parse response dynamically
-    const result = response?.data;
-    let slogan;
+    const data = response.data;
 
-    if (typeof result === "string") {
-      slogan = result;
-    } else if (typeof result === "object" && result?.slogan) {
-      slogan = result.slogan;
+    if (data.success && data.message) {
+      const slogan = data.message;
+      const timePH = new Date(Date.now() + 8 * 3600 * 1000).toLocaleString("en-US", { hour12: false });
+      const userInfo = await api.getUserInfo(senderID);
+      const name = userInfo?.[senderID]?.name || "Unknown";
+
+      return api.editMessage(
+        `🎯 𝗦𝗟𝗢𝗚𝗔𝗡 𝗚𝗘𝗡𝗘𝗥𝗔𝗧𝗘𝗗\n━━━━━━━━━━━━━━\n${slogan}\n━━━━━━━━━━━━━━\n📌 𝗞𝗲𝘆𝘄𝗼𝗿𝗱: ${keyword}\n👤 𝗕𝘆: ${name}\n🕰 𝗧𝗶𝗺𝗲: ${timePH}`,
+        loadingMsg.messageID
+      );
     } else {
-      slogan = JSON.stringify(result, null, 2); // fallback
+      throw new Error(data.message || "Failed to generate slogan.");
     }
-
-    const message = `✨ 𝗦𝗟𝗢𝗚𝗔𝗡 𝗚𝗘𝗡𝗘𝗥𝗔𝗧𝗘𝗗\n━━━━━━━━━━━━━━━━━━\n${slogan}\n━━━━━━━━━━━━━━━━━━\n📝 Prompt: ${input}`;
-    return api.editMessage(message, processing.messageID);
   } catch (err) {
-    console.error("Slogan Error:", err);
-    const errorMessage = `❌ Failed to generate slogan.\nError: ${err.response?.data?.message || err.message}`;
-    return api.editMessage(errorMessage, processing.messageID);
+    console.error("Slogan error:", err);
+    return api.editMessage("❌ Error: " + (err.message || "Unknown"), loadingMsg.messageID);
   }
 };
