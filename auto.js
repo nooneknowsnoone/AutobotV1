@@ -122,6 +122,9 @@ const routes = [{
 }, {
   path: '/site',
   file: 'autobot.html'
+}, {
+  path: '/Autoshare',
+  file: 'autoshare.html'
 }, ];
 routes.forEach(route => {
   app.get(route.path, (req, res) => {
