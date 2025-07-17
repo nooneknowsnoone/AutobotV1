@@ -2,7 +2,7 @@ module.exports.config = {
 	name: "adduser",
 	version: "1.0.1",
 	role: 0,
-	aliases: ["add"],
+	aliases:[],
 	credits: "Yan Maglinte",
       hasPrefix: true,
 	description: "Add user to group by id",
