@@ -9,7 +9,12 @@ function formatFont(text) {
     A: "𝖠", B: "𝖡", C: "𝖢", D: "𝖣", E: "𝖤", F: "𝖥", G: "𝖦", H: "𝖧", I: "𝖨", J: "𝖩", K: "𝖪", L: "𝖫", M: "𝖬",
     N: "𝖭", O: "𝖮", P: "𝖯", Q: "𝖰", R: "𝖱", S: "𝖲", T: "𝖳", U: "𝖴", V: "𝖵", W: "𝖶", X: "𝖷", Y: "𝖸", Z: "𝖹"
   };
-  return [...text].map(char => fontEnabled && fontMapping[char] ? fontMapping[char] : char).join('');
+
+  let formattedText = "";
+  for (const char of text) {
+    formattedText += fontEnabled && fontMapping[char] ? fontMapping[char] : char;
+  }
+  return formattedText;
 }
 
 module.exports.config = {
@@ -17,12 +22,11 @@ module.exports.config = {
   version: '1.0.0',
   role: 0,
   hasPrefix: false,
-  aliases: ['tagline', 'brandline'],
-  description: 'Generate a brand slogan using a keyword',
-  usage: 'slogan <keyword>',
-  credits: 'BrandTag + Ry',
+  aliases: ['slg', 'genslogan'],
+  description: "Generate a catchy slogan using a keyword",
+  usage: "slogan [keyword]",
+  credits: 'Ry',
   cooldown: 3,
-  category: 'ai'
 };
 
 module.exports.run = async function ({ api, event, args }) {
@@ -32,49 +36,38 @@ module.exports.run = async function ({ api, event, args }) {
   const messageID = event.messageID;
 
   if (!keyword) {
-    return api.sendMessage(formatFont("❌ Please enter a keyword.\nExample: slogan coffee"), threadID, messageID);
+    return api.sendMessage(formatFont("❌ Please provide a keyword to generate a slogan."), threadID, messageID);
   }
 
-  api.sendMessage(formatFont("💬 𝗚𝗲𝗻𝗲𝗿𝗮𝘁𝗶𝗻𝗴 𝗮 𝘀𝗹𝗼𝗴𝗮𝗻..."), threadID, async (err, info) => {
+  api.sendMessage(formatFont('🎯 𝗚𝗘𝗡𝗘𝗥𝗔𝗧𝗜𝗡𝗚 𝗦𝗟𝗢𝗚𝗔𝗡...'), threadID, async (err, info) => {
     if (err) return;
 
     try {
-      const response = await axios.get("https://brandtag-slogan-generator.p.rapidapi.com/slogan", {
-        params: { keyword },
-        headers: {
-          "X-RapidAPI-Key": "c7e02850fdmsh18f4277b8a918b0p13abc0jsn9a1bb30fc38d",
-          "X-RapidAPI-Host": "brandtag-slogan-generator.p.rapidapi.com"
-        }
+      const { data } = await axios.get(`https://wildan-suldyir-apis.vercel.app/api/gemink`, {
+        params: { prompt: `Generate a catchy and humanized slogan using this keyword: ${keyword}` }
       });
 
-      const slogan = response.data?.slogan;
-      if (!slogan) {
-        return api.editMessage(formatFont("⚠️ No slogan found."), info.messageID);
-      }
+      const responseText = data.response?.trim() || "❌ No slogan generated.";
 
-      const userName = await new Promise(resolve => {
-        api.getUserInfo(senderID, (err, data) => {
-          resolve(data?.[senderID]?.name || "Unknown");
-        });
-      });
+      api.getUserInfo(senderID, (err, infoUser) => {
+        const userName = infoUser?.[senderID]?.name || "User";
+        const timePH = new Date(Date.now() + 8 * 60 * 60 * 1000).toLocaleString('en-US', { hour12: false });
 
-      const timePH = new Date(Date.now() + 8 * 60 * 60 * 1000)
-        .toLocaleString('en-US', { hour12: false });
-
-      const reply = `
-🏷️ 𝗕𝗥𝗔𝗡𝗗 𝗦𝗟𝗢𝗚𝗔𝗡
+        const reply = `
+💡 𝗦𝗟𝗢𝗚𝗔𝗡 𝗚𝗘𝗡𝗘𝗥𝗔𝗧𝗢𝗥
 ━━━━━━━━━━━━━━━━━━
-"${slogan}"
+📌 𝗞𝗲𝘆𝘄𝗼𝗿𝗱: ${keyword}
+📝 𝗥𝗲𝘀𝘂𝗹𝘁: ${responseText}
 ━━━━━━━━━━━━━━━━━━
-🔑 𝗞𝗲𝘆𝘄𝗼𝗿𝗱: ${keyword}
-👤 𝗕𝘆: ${userName}
+🙋 𝗕𝘆: ${userName}
 ⏰ 𝗧𝗶𝗺𝗲: ${timePH}`.trim();
 
-      api.editMessage(formatFont(reply), info.messageID);
+        api.editMessage(formatFont(reply), info.messageID);
+      });
 
     } catch (error) {
-      console.error("Slogan API Error:", error.message);
-      const errMsg = "❌ Error: " + (error.response?.data?.message || error.message || "API error.");
+      console.error("Slogan Error:", error);
+      const errMsg = "❌ Error: " + (error.response?.data?.message || error.message || "Something went wrong.");
       api.editMessage(formatFont(errMsg), info.messageID);
     }
   });
