@@ -103,7 +103,7 @@ module.exports.run = async function({ api, args, event, admin }) {
                 a({ body: "till next time gago bye na pasok kana sa aquarium mo bawal ka sa lupa mukha kang wtf" });
         }, 115000);
         setTimeout(() => {
-                a({ body: "tangina mo mamatay kana pabigat ka lang sa pamilya mo e" });
+                a({ body: "Bumalik kana Ashley " });
         }, 125000);
         setTimeout(() => {
                 a({ body: "di kapa minumura umiiyak kana" });
