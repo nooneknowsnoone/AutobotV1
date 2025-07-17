@@ -14,62 +14,65 @@ function formatFont(text) {
 
 module.exports.config = {
   name: 'chipkura',
-  version: '1.0.0',
+  version: '2.1.0',
   role: 0,
   hasPrefix: true,
   aliases: ['ckura', 'chip'],
-  description: "Image content recognizer via Chipkura API",
-  usage: "chipkura [message] (use with image reply)",
+  description: "Analyze prompt or image using Chipkura API",
+  usage: "chipkura [text] or reply to an image",
   credits: 'Ry',
   cooldown: 3,
 };
 
 module.exports.run = async function ({ api, event, args }) {
-  const prompt = args.join(" ").trim();
+  const promptText = args.join(" ").trim();
+  const userReply = event.messageReply?.body || '';
+  const finalPrompt = `${userReply} ${promptText}`.trim();
   const senderID = event.senderID;
   const threadID = event.threadID;
   const messageID = event.messageID;
 
+  // Optional image URL
   const imageUrl = event.messageReply?.attachments?.[0]?.type === 'photo'
     ? event.messageReply.attachments[0].url
-    : null;
+    : "";
 
-  if (!prompt || !imageUrl) {
-    return api.sendMessage(formatFont("❌ 𝗣𝗹𝗲𝗮𝘀𝗲 𝗽𝗿𝗼𝘃𝗶𝗱𝗲 𝗮 𝗺𝗲𝘀𝘀𝗮𝗴𝗲 𝗮𝗻𝗱 𝗿𝗲𝗽𝗹𝘆 𝘁𝗼 𝗮𝗻 𝗶𝗺𝗮𝗴𝗲."), threadID, messageID);
+  if (!finalPrompt) {
+    return api.sendMessage(formatFont("❌ Please enter a prompt or reply to an image."), threadID, messageID);
   }
 
-  api.sendMessage(formatFont("📸 𝗖𝗛𝗜𝗣𝗞𝗨𝗥𝗔 𝗜𝗦 𝗧𝗛𝗜𝗡𝗞𝗜𝗡𝗚..."), threadID, async (err, info) => {
+  api.sendMessage(formatFont('📸 𝗖𝗛𝗜𝗣𝗞𝗨𝗥𝗔 𝗜𝗦 𝗣𝗥𝗢𝗖𝗘𝗦𝗦𝗜𝗡𝗚...'), threadID, async (err, info) => {
     if (err) return;
 
     try {
       const { data } = await axios.get("https://jerome-web.gleeze.com/service/api/chipkura", {
         params: {
-          message: prompt,
+          message: finalPrompt,
           userid: senderID,
           imageurl: imageUrl
         }
       });
 
-      const result = data?.message || "❌ 𝗡𝗼 𝗿𝗲𝘀𝗽𝗼𝗻𝘀𝗲 𝗳𝗿𝗼𝗺 𝗖𝗵𝗶𝗽𝗸𝘂𝗿𝗮.";
+      const responseText = data?.message?.trim() || "❌ No response from Chipkura.";
 
       api.getUserInfo(senderID, (err, infoUser) => {
-        const userName = infoUser?.[senderID]?.name || "Unknown";
+        const userName = infoUser?.[senderID]?.name || "Unknown User";
         const timePH = new Date(Date.now() + 8 * 60 * 60 * 1000).toLocaleString('en-US', { hour12: false });
 
         const reply = `
-📸 𝗖𝗛𝗜𝗣𝗞𝗨𝗥𝗔 𝗥𝗘𝗣𝗢𝗥𝗧
+📸 𝗖𝗛𝗜𝗣𝗞𝗨𝗥𝗔 𝗔𝗡𝗔𝗟𝗬𝗦𝗜𝗦
 ━━━━━━━━━━━━━━━━━━
-${result}
+${responseText}
 ━━━━━━━━━━━━━━━━━━
-🗣 𝗥𝗲𝗾𝘂𝗲𝘀𝘁 𝗙𝗿𝗼𝗺: ${userName}
+🗣 𝗙𝗿𝗼𝗺: ${userName}
 ⏰ 𝗧𝗶𝗺𝗲: ${timePH}`.trim();
 
         api.editMessage(formatFont(reply), info.messageID);
       });
 
     } catch (error) {
-      console.error("Chipkura Error:", error);
-      const errMsg = "❌ Error: " + (error.response?.data?.message || error.message || "Failed to contact Chipkura API.");
+      console.error("Chipkura API Error:", error.message);
+      const errMsg = "❌ Error: " + (error.response?.data?.message || error.message || "Unknown error.");
       api.editMessage(formatFont(errMsg), info.messageID);
     }
   });
