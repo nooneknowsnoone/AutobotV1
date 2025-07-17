@@ -17,10 +17,10 @@ module.exports.config = {
   version: '1.0.0',
   role: 0,
   hasPrefix: false,
-  aliases: ['slog', 'tagline'],
-  description: 'Generate a catchy slogan based on a prompt',
-  usage: 'slogan <your product or idea>',
-  credits: 'PinoyGPT',
+  aliases: ['tagline', 'brandline'],
+  description: 'Generate a brand slogan using a keyword',
+  usage: 'slogan <keyword>',
+  credits: 'BrandTag + Ry',
   cooldown: 3,
   category: 'ai'
 };
@@ -32,43 +32,49 @@ module.exports.run = async function ({ api, event, args }) {
   const messageID = event.messageID;
 
   if (!keyword) {
-    return api.sendMessage(formatFont("❌ Please enter a keyword or idea.\nExample: slogan coffee shop"), threadID, messageID);
+    return api.sendMessage(formatFont("❌ Please enter a keyword.\nExample: slogan coffee"), threadID, messageID);
   }
 
-  api.sendMessage(formatFont("💡 𝗚𝗲𝗻𝗲𝗿𝗮𝘁𝗶𝗻𝗴 𝘆𝗼𝘂𝗿 𝘀𝗹𝗼𝗴𝗮𝗻..."), threadID, async (err, info) => {
+  api.sendMessage(formatFont("💬 𝗚𝗲𝗻𝗲𝗿𝗮𝘁𝗶𝗻𝗴 𝗮 𝘀𝗹𝗼𝗴𝗮𝗻..."), threadID, async (err, info) => {
     if (err) return;
 
     try {
-      const { data } = await axios.post("https://www.pinoygpt.com/api/generate_slogan.php", {
-        description: keyword
+      const response = await axios.get("https://brandtag-slogan-generator.p.rapidapi.com/slogan", {
+        params: { keyword },
+        headers: {
+          "X-RapidAPI-Key": "c7e02850fdmsh18f4277b8a918b0p13abc0jsn9a1bb30fc38d",
+          "X-RapidAPI-Host": "brandtag-slogan-generator.p.rapidapi.com"
+        }
       });
 
-      if (!data.success || !data.slogan) {
-        return api.editMessage(formatFont("⚠️ No slogan was generated."), info.messageID);
+      const slogan = response.data?.slogan;
+      if (!slogan) {
+        return api.editMessage(formatFont("⚠️ No slogan found."), info.messageID);
       }
 
-      const userName = await new Promise((resolve) => {
-        api.getUserInfo(senderID, (err, infoUser) => {
-          resolve(infoUser?.[senderID]?.name || "Unknown");
+      const userName = await new Promise(resolve => {
+        api.getUserInfo(senderID, (err, data) => {
+          resolve(data?.[senderID]?.name || "Unknown");
         });
       });
 
-      const timePH = new Date(Date.now() + 8 * 60 * 60 * 1000).toLocaleString('en-US', { hour12: false });
+      const timePH = new Date(Date.now() + 8 * 60 * 60 * 1000)
+        .toLocaleString('en-US', { hour12: false });
 
-      const response = `
-🎯 𝗦𝗟𝗢𝗚𝗔𝗡 𝗚𝗘𝗡𝗘𝗥𝗔𝗧𝗘𝗗
+      const reply = `
+🏷️ 𝗕𝗥𝗔𝗡𝗗 𝗦𝗟𝗢𝗚𝗔𝗡
 ━━━━━━━━━━━━━━━━━━
-"${data.slogan}"
+"${slogan}"
 ━━━━━━━━━━━━━━━━━━
-🗣 𝗞𝗲𝘆𝘄𝗼𝗿𝗱: ${keyword}
+🔑 𝗞𝗲𝘆𝘄𝗼𝗿𝗱: ${keyword}
 👤 𝗕𝘆: ${userName}
 ⏰ 𝗧𝗶𝗺𝗲: ${timePH}`.trim();
 
-      api.editMessage(formatFont(response), info.messageID);
+      api.editMessage(formatFont(reply), info.messageID);
 
     } catch (error) {
-      console.error("Slogan API Error:", error);
-      const errMsg = "❌ Error: " + (error.response?.data?.message || error.message || "Unable to contact slogan API.");
+      console.error("Slogan API Error:", error.message);
+      const errMsg = "❌ Error: " + (error.response?.data?.message || error.message || "API error.");
       api.editMessage(formatFont(errMsg), info.messageID);
     }
   });
