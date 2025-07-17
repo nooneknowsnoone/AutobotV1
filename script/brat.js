@@ -9,7 +9,7 @@ module.exports.config = {
     credits: "developer",
     description: "Generate a Bratz-style image",
     hasPrefix: false,
-    aliases: ["bratz"],
+    aliases: ["bvratz"],
     usage: "[brat <text>]",
     cooldown: 5
 };
@@ -22,7 +22,7 @@ module.exports.run = async function({ api, event, args }) {
         }
 
         const encodedText = encodeURIComponent(text);
-        const apiUrl = `https://api.zetsu.xyz/gen/brat?text=${encodedText}&apikey=6fbd0a144a296d257b30a752d4a178a5`;
+        const apiUrl = `https://jonell01-ccprojectsapihshs.hf.space/api/brat?text=${encodedText}&type=direct`;
         const imagePath = path.join(__dirname, "brat.png");
 
         api.sendMessage("✨ Generating Bratz-style image, please wait...", event.threadID);
