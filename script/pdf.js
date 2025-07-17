@@ -1,62 +1,79 @@
-const axios = require("axios");
-const fs = require("fs-extra");
-const path = require("path");
+const axios = require('axios');
+const fs = require('fs-extra');
+const path = require('path');
 
 module.exports.config = {
-  name: "pdf",
-  version: "1.0.0",
+  name: 'pdfgen',
+  version: '1.0.0',
   role: 0,
-  aliases: ["pdfshift", "htmltopdf"],
-  description: "Convert a URL or HTML content into a PDF using PDFShift API",
-  usage: "<url or HTML>",
-  credits: "Jayy",
+  aliases: ['pdfshift'],
+  description: 'Convert a replied link into a PDF using PDFShift API',
+  usage: '<reply to a URL>',
+  credits: 'Jayy',
   cooldown: 5,
 };
 
-module.exports.run = async function ({ api, event, args }) {
-  const { threadID, messageID } = event;
+module.exports.run = async function ({ api, event }) {
+  const { threadID, messageID, messageReply } = event;
+  const repliedText = messageReply?.body?.trim();
 
-  if (!args[0]) {
+  if (!/^https?:\/\//i.test(repliedText)) {
     return api.sendMessage(
-      "❌ Please provide a URL or HTML content to convert to PDF.\n\nUsage: pdfgen <url>",
+      '❌ Please reply to a valid URL (starting with http:// or https://) to convert it to PDF.',
       threadID,
       messageID
     );
   }
 
-  const input = args.join(" ");
-  const isURL = /^https?:\/\//i.test(input);
-  const apiKey = "sk_xxxxxxxxxxxx"; // replace with your real API key
+  const apiKey = 'sk_7d8bd3f7e9394c644ac6ca16fda554d7c7ae032d';
+  const outputPath = path.join(__dirname, `pdf_${Date.now()}.pdf`);
 
-  api.sendMessage("⏳ Converting to PDF, please wait...", threadID, async (err, info) => {
-    try {
-      const res = await axios.post(
-        "https://api.pdfshift.io/v3/convert/",
-        isURL ? { source: input } : { html: input },
-        {
-          responseType: "arraybuffer",
-          auth: { username: apiKey, password: "" },
-        }
-      );
+  api.sendMessage(
+    '⌛ Generating PDF from the link, please wait...',
+    threadID,
+    async (err, info) => {
+      if (err) return;
 
-      const pdfPath = path.join(__dirname, "output.pdf");
-      fs.writeFileSync(pdfPath, res.data);
+      try {
+        const response = await axios({
+          method: 'POST',
+          url: 'https://api.pdfshift.io/v3/convert/pdf',
+          headers: {
+            'X-API-Key': apiKey,
+            'Content-Type': 'application/json',
+          },
+          responseType: 'stream',
+          data: {
+            source: repliedText,
+          },
+        });
 
-      api.sendMessage(
-        {
-          body: "✅ PDF successfully generated!",
-          attachment: fs.createReadStream(pdfPath),
-        },
-        threadID,
-        () => fs.unlinkSync(pdfPath),
-        messageID
-      );
-    } catch (err) {
-      console.error("PDF generation failed:", err.response?.data || err.message);
-      api.editMessage(
-        "❌ Failed to generate PDF. Please check the input and try again.",
-        info.messageID
-      );
+        const writer = fs.createWriteStream(outputPath);
+        response.data.pipe(writer);
+
+        writer.on('finish', () => {
+          api.sendMessage(
+            {
+              body: '✅ PDF successfully generated!',
+              attachment: fs.createReadStream(outputPath),
+            },
+            threadID,
+            () => fs.unlinkSync(outputPath),
+            messageID
+          );
+        });
+
+        writer.on('error', err => {
+          console.error('PDF write error:', err);
+          api.editMessage('❌ Failed to save the PDF file.', info.messageID);
+        });
+      } catch (error) {
+        console.error('❌ PDF generation failed:', error.response?.data || error.message);
+        api.editMessage(
+          '❌ Error occurred while generating PDF. Make sure the link is valid and public.',
+          info.messageID
+        );
+      }
     }
-  });
+  );
 };
