@@ -4,11 +4,11 @@ const path = require('path');
 
 module.exports.config = {
   name: 'pdfgen',
-  version: '1.1.0',
+  version: '1.2.0',
   role: 0,
-  aliases: ['pdfshift', 'htmlpdf'],
-  description: 'Convert a replied link or image into a PDF using PDFShift API',
-  usage: '<reply to a URL or image>',
+  aliases: ['pdfshift', 'img2pdf'],
+  description: 'Convert replied URL or one/multiple images into a single PDF using PDFShift',
+  usage: '<reply to a URL or image(s)>',
   credits: 'Jayy',
   cooldown: 5,
 };
@@ -16,29 +16,37 @@ module.exports.config = {
 module.exports.run = async function ({ api, event }) {
   const { threadID, messageID, messageReply } = event;
 
-  // Check if there's a reply
   if (!messageReply) {
     return api.sendMessage(
-      '❌ Please reply to a message that contains a URL or an image.',
+      '❌ Please reply to a message that contains a URL or image(s).',
       threadID,
       messageID
     );
   }
 
   const repliedText = messageReply?.body?.trim();
-  const attachment = messageReply?.attachments?.[0];
-  let sourceURL = null;
+  const attachments = messageReply?.attachments || [];
 
-  // Determine if it's a valid URL or image
+  let htmlContent = '';
+  let isValidSource = false;
+
+  // If user replies with a URL (text)
   if (/^https?:\/\//i.test(repliedText)) {
-    sourceURL = repliedText;
-  } else if (attachment && attachment.type === 'photo' && attachment.url) {
-    sourceURL = attachment.url;
+    isValidSource = true;
+    htmlContent = `<iframe src="${repliedText}" width="100%" height="100%"></iframe>`;
   }
 
-  if (!sourceURL) {
+  // If user replies with one or more images
+  if (attachments.length > 0 && attachments.every(a => a.type === 'photo')) {
+    isValidSource = true;
+    htmlContent = attachments
+      .map(img => `<img src="${img.url}" style="width:100%;margin-bottom:10px;">`)
+      .join('');
+  }
+
+  if (!isValidSource) {
     return api.sendMessage(
-      '❌ Replied message must contain a valid URL or an image.',
+      '❌ Please reply to a valid link or image(s). Supported types: http(s):// URL or photo.',
       threadID,
       messageID
     );
@@ -47,7 +55,7 @@ module.exports.run = async function ({ api, event }) {
   const apiKey = 'sk_7d8bd3f7e9394c644ac6ca16fda554d7c7ae032d';
   const outputPath = path.join(__dirname, `pdf_${Date.now()}.pdf`);
 
-  api.sendMessage('⌛ Generating PDF from the replied content, please wait...', threadID, async (err, info) => {
+  api.sendMessage('⏳ Generating PDF, please wait...', threadID, async (err, info) => {
     try {
       const response = await axios({
         method: 'POST',
@@ -58,7 +66,7 @@ module.exports.run = async function ({ api, event }) {
         },
         responseType: 'stream',
         data: {
-          source: sourceURL,
+          html: htmlContent,
         },
       });
 
@@ -78,12 +86,13 @@ module.exports.run = async function ({ api, event }) {
       });
 
       writer.on('error', err => {
-        console.error('❌ PDF write error:', err);
+        console.error('❌ Error writing PDF:', err);
         api.editMessage('❌ Failed to save the PDF file.', info.messageID);
       });
+
     } catch (error) {
-      console.error('❌ PDF generation failed:', error.response?.data || error.message);
-      api.editMessage('❌ Error generating PDF. Ensure the URL or image is accessible.', info.messageID);
+      console.error('❌ PDFShift API error:', error.response?.data || error.message);
+      api.editMessage('❌ Error generating PDF. Please try again later.', info.messageID);
     }
   });
 };
