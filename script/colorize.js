@@ -4,12 +4,12 @@ const path = require('path');
 
 module.exports.config = {
   name: "colorize",
-  version: "1.0.0",
+  version: "1.0.1",
   role: 0,
   credits: "dev",
   hasPrefix: true,
   aliases: [],
-  usages: "<reply to image>",
+  usages: "<reply to black & white image>",
   cooldown: 5,
 };
 
@@ -17,7 +17,7 @@ module.exports.run = async function ({ api, event }) {
   const { threadID, messageID, messageReply } = event;
 
   if (!messageReply || !messageReply.attachments || messageReply.attachments.length === 0) {
-    return api.sendMessage("❌ Please reply to a image.", threadID, messageID);
+    return api.sendMessage("❌ Please reply to a black & white image.", threadID, messageID);
   }
 
   const attachment = messageReply.attachments[0];
@@ -26,16 +26,22 @@ module.exports.run = async function ({ api, event }) {
   }
 
   const imageUrl = attachment.url;
-  const tempPath = path.join(__dirname, 'cache', `colorized_${Date.now()}.jpg`);
   const apiUrl = `https://rapido.zetsu.xyz/api/colorize-image?imageUrl=${encodeURIComponent(imageUrl)}`;
 
   try {
     api.sendMessage("🎨 Colorizing the image, please wait...", threadID, messageID);
 
-    const response = await axios.get(apiUrl, { responseType: 'arraybuffer' });
+    const { data } = await axios.get(apiUrl);
+    if (!data.result) {
+      return api.sendMessage("❌ Colorization failed. Invalid response.", threadID, messageID);
+    }
 
+    const finalImageUrl = data.result;
+    const tempPath = path.join(__dirname, "cache", `colorized_${Date.now()}.jpg`);
+
+    const imageRes = await axios.get(finalImageUrl, { responseType: "arraybuffer" });
     fs.ensureDirSync(path.dirname(tempPath));
-    fs.writeFileSync(tempPath, Buffer.from(response.data, "binary"));
+    fs.writeFileSync(tempPath, Buffer.from(imageRes.data, "binary"));
 
     api.sendMessage({
       body: "✅ Here is your colorized image!",
