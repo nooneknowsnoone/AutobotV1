@@ -4,9 +4,9 @@ const path = require('path');
 
 module.exports.config = {
   name: "upscale",
-  version: "1.0.0",
+  version: "1.0.1",
   role: 0,
-  credits: "Ry",
+  credits: "dev",
   hasPrefix: true,
   aliases: [],
   usages: "<reply to image>",
@@ -26,16 +26,22 @@ module.exports.run = async function ({ api, event }) {
   }
 
   const imageUrl = attachment.url;
-  const tempPath = path.join(__dirname, 'cache', `upscale_${Date.now()}.jpg`);
   const apiUrl = `https://rapido.zetsu.xyz/api/upscale-image?imageUrl=${encodeURIComponent(imageUrl)}`;
 
   try {
-    api.sendMessage("🔄 Upscaling image, please wait...", threadID, messageID);
+    api.sendMessage("🔄 Upscaling the image, please wait...", threadID, messageID);
 
-    const response = await axios.get(apiUrl, { responseType: 'arraybuffer' });
+    const { data } = await axios.get(apiUrl);
+    if (!data.resultImageUrl) {
+      return api.sendMessage("❌ Upscale failed. Invalid response from API.", threadID, messageID);
+    }
 
+    const finalImageUrl = data.resultImageUrl;
+    const tempPath = path.join(__dirname, "cache", `upscaled_${Date.now()}.jpg`);
+
+    const imageRes = await axios.get(finalImageUrl, { responseType: "arraybuffer" });
     fs.ensureDirSync(path.dirname(tempPath));
-    fs.writeFileSync(tempPath, Buffer.from(response.data, "binary"));
+    fs.writeFileSync(tempPath, Buffer.from(imageRes.data, "binary"));
 
     api.sendMessage({
       body: "✅ Here is your upscaled image!",
