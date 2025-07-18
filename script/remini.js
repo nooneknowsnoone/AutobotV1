@@ -44,6 +44,6 @@ module.exports.run = async ({ api, event }) => {
 
   } catch (err) {
     console.error("Remini Error:", err.message);
-    api.sendMessage("❌ An error occurred while enhancing the image.", threadID, messageID);
+    api.sendMessage("❌ Opss down API kindly use alternative 4k or upscale .", threadID, messageID);
   }
 };
