@@ -8,7 +8,6 @@ module.exports.config = {
   role: 0,
   credits: "Ry",
   description: "Send a quiz and answer by replying with A/B/C/D",
-  commandCategory: "Games",
   usages: "quiz",
   cooldowns: 3,
   hasPrefix: true
