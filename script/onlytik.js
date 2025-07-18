@@ -5,10 +5,11 @@ const fs = require('fs-extra');
 module.exports.config = {
     name: "onlytik",
     version: "1.0.0",
-    role: 2,
+    role: 0,
     description: "Fetch a random TikTok video from OnlyTik API.",
-    hasPrefix: true,
-    credits: "Ry",
+    prefix: false,
+    premium: false,
+    credits: "Jayy x HajiMix API",
     cooldowns: 10,
     category: "media"
 };
@@ -18,9 +19,9 @@ module.exports.run = async function ({ api, event }) {
         api.sendMessage("📥 𝗙𝗲𝘁𝗰𝗵𝗶𝗻𝗴 𝗮 𝗧𝗶𝗸𝗧𝗼𝗸 𝘃𝗶𝗱𝗲𝗼, 𝗽𝗹𝗲𝗮𝘀𝗲 𝘄𝗮𝗶𝘁...", event.threadID, event.messageID);
 
         const res = await axios.get('https://haji-mix-api.gleeze.com/api/onlytik?stream=true&api_key=f4a2fb31166ad43608b9a3aa4195ae1491ab497b3bead8ca77699afb5d149a6d');
-        const videoUrl = res.data?.result?.video;
+        const data = res.data;
 
-        if (!videoUrl) {
+        if (!data || !data.url) {
             return api.sendMessage('❌ 𝗙𝗮𝗶𝗹𝗲𝗱 𝘁𝗼 𝗴𝗲𝘁 𝘃𝗶𝗱𝗲𝗼. 𝗧𝗿𝘆 𝗮𝗴𝗮𝗶𝗻 𝗹𝗮𝘁𝗲𝗿.', event.threadID, event.messageID);
         }
 
@@ -29,7 +30,7 @@ module.exports.run = async function ({ api, event }) {
 
         const videoStream = await axios({
             method: 'GET',
-            url: videoUrl,
+            url: data.url,
             responseType: 'stream'
         });
 
@@ -38,17 +39,17 @@ module.exports.run = async function ({ api, event }) {
 
         writer.on('finish', () => {
             api.sendMessage({
-                body: `🎥 𝗥𝗮𝗻𝗱𝗼𝗺 𝗧𝗶𝗸𝗧𝗼𝗸 𝗩𝗶𝗱𝗲𝗼`,
+                body: `🎥 𝗧𝗶𝗸𝗧𝗼𝗸 𝗯𝘆 @${data.username}\n❤️ 𝗟𝗶𝗸𝗲𝘀: ${data.likes}\n📝 𝗖𝗮𝗽𝘁𝗶𝗼𝗻: ${data.desc || 'No description'}`,
                 attachment: fs.createReadStream(filePath)
             }, event.threadID, () => fs.unlinkSync(filePath), event.messageID);
         });
 
         writer.on('error', () => {
-            api.sendMessage('🚫 𝗘𝗿𝗿𝗼𝗿 𝗱𝗼𝘄𝗻𝗹𝗼𝗮𝗱𝗶𝗻𝗴 𝘁𝗵𝗲 𝘃𝗶𝗱𝗲𝗼. 𝗧𝗿𝘆 𝗮𝗴𝗮𝗶𝗻.', event.threadID, event.messageID);
+            api.sendMessage('🚫 𝗘𝗿𝗿𝗼𝗿 𝗱𝗼𝘄𝗻𝗹𝗼𝗮𝗱𝗶𝗻𝗴 𝘁𝗵𝗲 𝘃𝗶𝗱𝗲𝗼. 𝗣𝗹𝗲𝗮𝘀𝗲 𝘁𝗿𝘆 𝗮𝗴𝗮𝗶𝗻.', event.threadID, event.messageID);
         });
 
     } catch (error) {
         console.error("❌ Error in onlytik command:", error);
-        api.sendMessage('🚫 𝗘𝗿𝗿𝗼𝗿 𝗳𝗲𝘁𝗰𝗵𝗶𝗻𝗴 𝘃𝗶𝗱𝗲𝗼. 𝗧𝗿𝘆 𝗮𝗴𝗮𝗶𝗻 𝗹𝗮𝘁𝗲𝗿.', event.threadID, event.messageID);
+        api.sendMessage('🚫 𝗘𝗿𝗿𝗼𝗿 𝗳𝗲𝘁𝗰𝗵𝗶𝗻𝗴 𝗩𝗶𝗱𝗲𝗼. 𝗧𝗿𝘆 𝗹𝗮𝘁𝗲𝗿.', event.threadID, event.messageID);
     }
 };
