@@ -14,7 +14,7 @@ function formatFont(text) {
 
 module.exports.config = {
   name: 'ai',
-  version: '2.0.0',
+  version: '2.0.1',
   role: 0,
   hasPrefix: false,
   aliases: ['sailor', 'box'],
@@ -45,9 +45,9 @@ module.exports.run = async function ({ api, event, args }) {
         imageUrl = event.messageReply.attachments[0].url;
       }
 
-      const { data } = await axios.get("https://kaiz-apis.gleeze.com/api/gemini-vision", {
+      const { data } = await axios.get("https://kaiz-apis.gleeze.com/api/gpt-4.1", {
         params: {
-          q: finalPrompt,
+          ask: finalPrompt,
           uid: senderID,
           imageUrl: imageUrl,
           apikey: "bbcc44b9-4710-41c7-8034-fa2000ea7ae5"
@@ -58,7 +58,7 @@ module.exports.run = async function ({ api, event, args }) {
         }
       });
 
-      const responseText = data.response || "❌ No response received from Gemini Vision.";
+      const responseText = data.response || "❌ No response received from GPT-4.1.";
 
       api.getUserInfo(senderID, (err, infoUser) => {
         const userName = infoUser?.[senderID]?.name || "Unknown User";
@@ -76,7 +76,7 @@ ${responseText}
       });
 
     } catch (error) {
-      console.error("Gemini API Error:", error);
+      console.error("GPT-4.1 API Error:", error);
       const errMsg = "❌ Error: " + (error.response?.data?.message || error.message || "Unknown error.");
       api.editMessage(formatFont(errMsg), info.messageID);
     }
