@@ -1,48 +1,25 @@
 const axios = require("axios");
 
-// Dito mo ito ilalagay
-const quizCache = new Map(); // Stores ongoing quiz per user
+const quizCache = new Map();
 
 module.exports.config = {
   name: "quiz",
-  version: "1.0.1",
+  version: "1.0.2",
   role: 0,
-  credits: "Kaizenji x Jayy",
-  description: "Answer a quiz directly with quiz A/B/C/D",
+  credits: "Ry",
+  description: "Send a quiz and answer by replying with A/B/C/D",
   commandCategory: "Games",
-  usages: "[A/B/C/D] or no args to get question",
+  usages: "quiz",
   cooldowns: 3,
   hasPrefix: true
 };
 
-module.exports.run = async function({ api, event, args }) {
-  const userId = event.senderID;
-  const answer = args[0]?.toUpperCase();
-
-  if (["A", "B", "C", "D"].includes(answer)) {
-    const lastQuiz = quizCache.get(userId);
-
-    if (!lastQuiz) {
-      return api.sendMessage("❌ You haven't received a quiz yet. Type `quiz` to get a question.", event.threadID);
-    }
-
-    const isCorrect = answer === lastQuiz.correct;
-    quizCache.delete(userId);
-
-    return api.sendMessage(
-      isCorrect
-        ? `✅ Correct! Well done.`
-        : `❌ Incorrect. The correct answer was: ${lastQuiz.correct}`,
-      event.threadID
-    );
-  }
-
-  // Fetch quiz
+module.exports.run = async function ({ api, event }) {
   try {
     const res = await axios.get("https://kaiz-apis.gleeze.com/api/quiz?limit=1&apikey=bbcc44b9-4710-41c7-8034-fa2000ea7ae5");
     const q = res.data.questions[0];
 
-    const message = `🧠 𝗤𝘂𝗶𝘇 𝗧𝗶𝗺𝗲!
+    const quizMessage = `🧠 𝗤𝘂𝗶𝘇 𝗧𝗶𝗺𝗲!
 ━━━━━━━━━━━━━━
 📌 𝗤𝘂𝗲𝘀𝘁𝗶𝗼𝗻: ${q.question}
 🎯 𝗖𝗮𝘁𝗲𝗴𝗼𝗿𝘆: ${q.category}
@@ -53,13 +30,39 @@ B. ${q.choices.B}
 C. ${q.choices.C}
 D. ${q.choices.D}
 ━━━━━━━━━━━━━━
-✅ Answer by typing: quiz A / quiz B / quiz C / quiz D`;
+✅ Reply with A, B, C, or D to answer.`;
 
-    quizCache.set(userId, { correct: q.correct_answer.toUpperCase() });
+    const sent = await api.sendMessage(quizMessage, event.threadID, event.messageID);
 
-    return api.sendMessage(message, event.threadID);
+    quizCache.set(sent.messageID, {
+      correct: q.correct_answer.toUpperCase(),
+      user: event.senderID
+    });
   } catch (err) {
-    console.error(err);
-    return api.sendMessage("❌ Failed to fetch quiz. Try again later.", event.threadID);
+    console.error("Quiz error:", err);
+    return api.sendMessage("❌ Failed to fetch quiz. Please try again later.", event.threadID);
+  }
+};
+
+module.exports.handleReply = async function ({ api, event }) {
+  const reply = event.body.trim().toUpperCase();
+  const validChoices = ["A", "B", "C", "D"];
+
+  if (!validChoices.includes(reply)) return;
+
+  // Search cache for active quiz for this thread
+  for (const [msgID, data] of quizCache.entries()) {
+    if (event.messageReply?.messageID === msgID && event.senderID === data.user) {
+      const isCorrect = reply === data.correct;
+      quizCache.delete(msgID);
+
+      return api.sendMessage(
+        isCorrect
+          ? "✅ Correct! Well done 👏."
+          : `❌ Incorrect. The correct answer was: ${data.correct} 😝`,
+        event.threadID,
+        event.messageID
+      );
+    }
   }
 };
