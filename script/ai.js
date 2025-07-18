@@ -18,7 +18,7 @@ module.exports.config = {
   role: 0,
   hasPrefix: false,
   aliases: ['sailor', 'box'],
-  description: "Analyze prompt or image using Gemini Vision API only",
+  description: "Analyze prompt or image gpt4.1 model",
   usage: "ai [prompt] or reply to an image",
   credits: 'Ry',
   cooldown: 3,
