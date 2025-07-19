@@ -25,7 +25,7 @@ module.exports.config = {
   aliases: ["haw?","haw", "howpo", "h0w"],
   description: "Casual.",
   usage: "how",
-  credits: "Rey",
+  credits: "Chatbot system",
   cooldown: 2,
 };
 
