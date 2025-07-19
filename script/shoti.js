@@ -7,8 +7,7 @@ module.exports.config = {
     version: "1.0.0",
     role: 0,
     description: "Fetch a random Shoti video.",
-    prefix: false,
-    premium: false,
+    hasPrefix: false,
     credits: "Akimitsu",
     cooldowns: 10,
     category: "media"
@@ -17,7 +16,7 @@ module.exports.config = {
 module.exports.run = async function ({ api, event }) {
     try {
         // Inform user about the fetching process
-        api.sendMessage("🎬 𝗙𝗲𝘁𝗰𝗵𝗶𝗻𝗴 𝗮 𝗿𝗮𝗻𝗱𝗼𝗺 𝗦𝗵𝗼𝘁𝗶 𝘃𝗶𝗱𝗲𝗼, 𝗽𝗹𝗲𝗮𝘀𝗲 𝘄𝗮𝗶𝘁...", event.threadID, event.messageID);
+        api.sendMessage("🎬 𝖥𝖾𝗍𝖼𝗁𝗂𝗇𝗀 𝗌𝗁𝗈𝗍𝗂 𝗏𝗂𝖽𝖾𝗈 𝗉𝗅𝖾𝖺𝗌𝖾 𝗐𝖺𝗂𝗍..", event.threadID, event.messageID);
 
         // API call
         const response = await axios.get('https://shoti.fbbot.org/api/get-shoti?type=video', {
@@ -45,7 +44,7 @@ module.exports.run = async function ({ api, event }) {
 
         writer.on('finish', async () => {
             api.sendMessage({
-                body: '🎥 𝗛𝗲𝗿𝗲’𝘀 𝘆𝗼𝘂𝗿 𝗿𝗮𝗻𝗱𝗼𝗺 𝗦𝗵𝗼𝘁𝗶 𝘃𝗶𝗱𝗲𝗼!',
+                body: '🎥 𝖧𝖾𝗒𝗒!',
                 attachment: fs.createReadStream(filePath)
             }, event.threadID, () => {
                 fs.unlinkSync(filePath); // Cleanup
