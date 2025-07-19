@@ -33,5 +33,5 @@ module.exports.run = async function ({ api, event }) {
   const threadID = event.threadID;
   const messageID = event.messageID;
 
-  return api.sendMessage(formatFont("Hello 😊 How can i assist you today?\n\nKindly simplify type “help” to see my available commands "), threadID, messageID);
+  return api.sendMessage(formatFont("Hello 😊 How can i assist you today?\n\nKindly simplify type “help” to see my available commands.\n\nIf you need 24/7 services follow our main pagebot:\n\🔗: facebook.com/hersheyassistant"), threadID, messageID);
 };
