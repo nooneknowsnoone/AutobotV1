@@ -1,40 +1,44 @@
 const axios = require("axios");
+const fs = require("fs");
+const path = require("path");
 
 module.exports.config = {
   name: "pinayot",
   version: "1.0.0",
-  role: 0,
-  credits: "Rye",
-  description: "Fetch videos from Pinayot by page number",
-  commandCategory: "Media",
-  usages: "pinayot <page>",
-  cooldowns: 5
+  role: 2,
+  hasPrefix: false,
+  aliases: ["pyf"],
+  description: "Fetch 5 random Pinayot videos per page",
+  usage: "pinayot [page]",
+  credits: "Ry",
+  cooldown: 5,
 };
 
-module.exports.run = async function({ api, event, args }) {
+module.exports.run = async function ({ api, event, args }) {
+  const page = args[0] || 1;
+  const url = `https://betadash-api-swordslush-production.up.railway.app/pinayot?page=${page}`;
+
   try {
-    const page = args[0] || 1;
-    const res = await axios.get(`https://betadash-api-swordslush-production.up.railway.app/pinayot?page=${page}`);
-    const { result, author } = res.data;
+    const res = await axios.get(url);
+    const data = res.data.result;
 
-    if (!result || result.length === 0) return api.sendMessage("❌ No results found.", event.threadID, event.messageID);
-
-    let msgList = [];
-
-    for (const item of result) {
-      const message = {
-        body: `🎬 ${item.description}\n📅 Upload Date: ${item.uploadDate}\n🌐 Source: ${author}\n🔗 Direct: ${item.videoUrl}`,
-        attachment: await global.utils.getStreamFromURL(item.thumbnailUrl)
-      };
-      msgList.push(message);
+    if (!data || data.length === 0) {
+      return api.sendMessage("❌ No results found for this page.", event.threadID, event.messageID);
     }
 
-    for (const msg of msgList) {
+    const limitedResults = data.slice(0, 5); // Get first 5 only
+    for (let item of limitedResults) {
+      const msg = {
+        body: `📹 ${item.description}\n\n📅 Uploaded: ${item.uploadDate}\n🔗 Video: ${item.videoUrl}`,
+        attachment: await global.utils.getStreamFromURL(item.thumbnailUrl),
+      };
       await api.sendMessage(msg, event.threadID);
     }
 
-  } catch (err) {
-    console.error(err);
-    return api.sendMessage("⚠️ An error occurred while fetching data.", event.threadID, event.messageID);
+    // Optional pagination info
+    api.sendMessage(`✅ Displayed 5 results from page ${page}`, event.threadID);
+  } catch (error) {
+    console.error("Error fetching pinayot data:", error.message);
+    api.sendMessage("⚠️ Error fetching data. Please try again later.", event.threadID, event.messageID);
   }
 };
