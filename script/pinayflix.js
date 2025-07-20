@@ -4,47 +4,37 @@ module.exports.config = {
   name: "pinayot",
   version: "1.0.0",
   role: 0,
-  hasPrefix: false,
-  aliases: [],
-  description: "Fetch 5 random Pinayot videos per page",
-  usage: "pinayot [page]",
-  credits: "Jayy x ChatGPT",
-  cooldown: 3,
+  credits: "Rye",
+  description: "Fetch videos from Pinayot by page number",
+  commandCategory: "Media",
+  usages: "pinayot <page>",
+  cooldowns: 5
 };
 
-module.exports.run = async function ({ api, event, args }) {
-  const page = parseInt(args[0]) || 1;
-  const url = `https://betadash-api-swordslush-production.up.railway.app/pinayot?page=${page}`;
-
+module.exports.run = async function({ api, event, args }) {
   try {
-    const res = await axios.get(url);
-    const data = res.data?.result;
+    const page = args[0] || 1;
+    const res = await axios.get(`https://betadash-api-swordslush-production.up.railway.app/pinayot?page=${page}`);
+    const { result, author } = res.data;
 
-    if (!data || data.length === 0) {
-      return api.sendMessage(`❌ Walang video sa page ${page}.`, event.threadID, event.messageID);
-    }
+    if (!result || result.length === 0) return api.sendMessage("❌ No results found.", event.threadID, event.messageID);
 
-    let count = 0;
+    let msgList = [];
 
-    for (const video of data.slice(0, 5)) {
+    for (const item of result) {
       const message = {
-        body:
-          `🎬 ${video.description}\n` +
-          `📅 ${video.uploadDate}\n` +
-          `🔗 [Watch Direct](${video.videoUrl})\n` +
-          `📥 Iframe: ${video.iframeUrl}`,
-        attachment: await global.utils.getStreamFromURL(video.thumbnailUrl),
+        body: `🎬 ${item.description}\n📅 Upload Date: ${item.uploadDate}\n🌐 Source: ${author}\n🔗 Direct: ${item.videoUrl}`,
+        attachment: await global.utils.getStreamFromURL(item.thumbnailUrl)
       };
-
-      await api.sendMessage(message, event.threadID);
-      count++;
+      msgList.push(message);
     }
 
-    // Footer message
-    api.sendMessage(`✅ Ipinakita ang ${count} video sa Page ${page}. Gamitin ang "pinayot ${page + 1}" para sa susunod.`, event.threadID);
+    for (const msg of msgList) {
+      await api.sendMessage(msg, event.threadID);
+    }
 
-  } catch (e) {
-    console.error(e);
-    return api.sendMessage("❌ Error fetching data from server.", event.threadID, event.messageID);
+  } catch (err) {
+    console.error(err);
+    return api.sendMessage("⚠️ An error occurred while fetching data.", event.threadID, event.messageID);
   }
 };
