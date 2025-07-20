@@ -1,19 +1,38 @@
+const fs = require("fs");
 const os = require("os");
+const path = require("path");
+
+const historyFilePath = path.resolve(__dirname, '..', 'data', 'history.json');
 
 module.exports.config = {
   name: "uptime",
-  version: "1.0.2",
+  version: "1.0.3",
   role: 0,
   hasPrefix: true,
   aliases: [],
-  description: "Show bot uptime and system information.",
+  description: "uptime",
   usage: "uptime",
   credits: "Ry",
   cooldown: 5
 };
 
 module.exports.run = async function ({ api, event }) {
-  const uptimeSec = process.uptime();
+  let historyData = [];
+
+  try {
+    historyData = require(historyFilePath);
+  } catch (err) {
+    return api.sendMessage("⚠️ Failed to load history.json.", event.threadID, event.messageID);
+  }
+
+  const currentUID = api.getCurrentUserID();
+  const mainBot = historyData.find(u => u.userid === currentUID);
+
+  if (!mainBot) {
+    return api.sendMessage("❌ Main bot not found in session history.", event.threadID, event.messageID);
+  }
+
+  const uptimeSec = parseInt(mainBot.time || 0, 10);
   const days = Math.floor(uptimeSec / (60 * 60 * 24));
   const hours = Math.floor((uptimeSec % (60 * 60 * 24)) / (60 * 60));
   const minutes = Math.floor((uptimeSec % (60 * 60)) / 60);
@@ -22,13 +41,12 @@ module.exports.run = async function ({ api, event }) {
   const userInfo = await api.getUserInfo(event.senderID);
   const userName = userInfo[event.senderID]?.name || "Unknown";
 
-  const platform = os.platform();
-  const arch = os.arch();
   const osVersion = os.version();
+  const platform = os.platform();
   const cpuModel = os.cpus()[0].model;
   const cpuCores = os.cpus().length;
-  const totalMem = (os.totalmem() / (1024 ** 3)).toFixed(2);
-  const freeMem = (os.freemem() / (1024 ** 3)).toFixed(2);
+  const totalMem = (os.totalmem() / 1024 ** 3).toFixed(2);
+  const freeMem = (os.freemem() / 1024 ** 3).toFixed(2);
 
   const msg = 
 `👤 𝗡𝗔𝗠𝗘: ${userName}
