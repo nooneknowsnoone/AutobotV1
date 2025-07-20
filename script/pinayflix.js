@@ -1,86 +1,62 @@
 const axios = require('axios');
-const fs = require('fs-extra');
 const path = require('path');
+const fs = require('fs-extra');
 
 module.exports.config = {
-  name: "pinayflix",
-  version: "1.1.0",
+  name: "pinayot",
+  version: "1.0.0",
   role: 2,
-  description: "Search and download PinayFlix videos by query.",
-  hasPrefix: true,
+  description: "Fetch a Pinay video using a specific page number.",
+  hasPrefix: false,
   credits: "Ry",
   cooldowns: 10,
   category: "media",
-  usage: "pinayflix <search> | <page>"
+  usages: "[page number]"
 };
 
 module.exports.run = async function ({ api, event, args }) {
-  const { threadID, messageID } = event;
+  const threadID = event.threadID;
+  const messageID = event.messageID;
 
-  if (!args.length) {
-    return api.sendMessage("❌ Usage: pinayflix <search query> | <page number>", threadID, messageID);
-  }
-
-  const [query, page = 1] = args.join(" ").split("|").map(x => x.trim());
-  if (!query) return api.sendMessage("❌ Please enter a search keyword.", threadID, messageID);
+  const page = parseInt(args[0]) || 1;
 
   try {
-    api.setMessageReaction("⏳", messageID, () => {}, true);
+    api.sendMessage(`📥 Fetching Pinay video from page ${page}, please wait...`, threadID, messageID);
 
-    const apiUrl = `http://sgp1.hmvhostings.com:25743/pinay?search=${encodeURIComponent(query)}&page=${page}`;
-    const { data } = await axios.get(apiUrl);
+    const response = await axios.get(`https://betadash-api-swordslush-production.up.railway.app/pinayot?page=${page}`);
+    const video = response.data?.result?.[0];
 
-    if (!data || data.length === 0) {
-      api.setMessageReaction("❌", messageID, () => {}, true);
-      return api.sendMessage(`❌ No results for "${query}" on page ${page}`, threadID, messageID);
+    if (!video || !video.videoUrl) {
+      return api.sendMessage("❌ No video found on that page. Try a different one.", threadID, messageID);
     }
 
-    const tempDir = path.join(__dirname, "..", "temp", "pinayflix");
-    await fs.ensureDir(tempDir);
+    const fileName = `${messageID}_pinayot.mp4`;
+    const filePath = path.join(__dirname, fileName);
 
-    const videos = data.slice(0, 3); // limit to 3 videos
-    for (const [index, video] of videos.entries()) {
-      const videoPath = path.join(tempDir, `video_${index}_${Date.now()}.mp4`);
+    const videoStream = await axios({
+      method: 'GET',
+      url: video.videoUrl,
+      responseType: 'stream'
+    });
 
-      try {
-        const response = await axios.get(video.video, { responseType: "stream" });
-        const writer = fs.createWriteStream(videoPath);
-        response.data.pipe(writer);
+    const writer = fs.createWriteStream(filePath);
+    videoStream.data.pipe(writer);
 
-        await new Promise((resolve, reject) => {
-          writer.on("finish", resolve);
-          writer.on("error", reject);
-        });
+    writer.on('finish', async () => {
+      api.sendMessage({
+        body: `🎥 ${video.description}\n📅 Uploaded: ${video.uploadDate}`,
+        attachment: fs.createReadStream(filePath)
+      }, threadID, () => {
+        fs.unlinkSync(filePath);
+      }, messageID);
+    });
 
-        await api.sendMessage(
-          `🎞️ Result ${index + 1} (Page ${page})\n📌 Title: ${video.title}\n🔗 Link: ${video.link}\n🖼 Preview: ${video.img}`,
-          threadID
-        );
+    writer.on('error', () => {
+      api.sendMessage("🚫 Error saving the video. Try again later.", threadID, messageID);
+    });
 
-        await api.sendMessage({
-          body: `📹 Video ${index + 1} of ${videos.length}`,
-          attachment: fs.createReadStream(videoPath),
-        }, threadID);
-
-      } catch (error) {
-        console.error(`⚠️ Video ${index} error:`, error);
-        await api.sendMessage(`⚠️ Failed to send video ${index + 1}`, threadID);
-      } finally {
-        if (await fs.pathExists(videoPath)) {
-          await fs.unlink(videoPath);
-        }
-      }
-    }
-
-    api.setMessageReaction("✅", messageID, () => {}, true);
-    api.sendMessage(
-      `✅ Found ${data.length} results for "${query}"\n📄 Page: ${page}\n💡 Tip: Use "pinayflix ${query} | ${+page + 1}" to go to next page.`,
-      threadID
-    );
-
-  } catch (err) {
-    api.setMessageReaction("❌", messageID, () => {}, true);
-    console.error("❌ PinayFlix Error:", err);
-    return api.sendMessage("❌ Failed to process your request.", threadID, messageID);
+  } catch (error) {
+    console.error("❌ Error:", error);
+    api.sendMessage("🚫 Failed to fetch video. Please try again later.", threadID, messageID);
   }
 };
