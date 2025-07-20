@@ -4,12 +4,12 @@ const fs = require('fs-extra');
 
 module.exports.config = {
   name: "pinayot",
-  version: "1.0.0",
-  role: 2,
-  description: "Fetch a Pinay video using a specific page number.",
+  version: "2.0.0",
+  role: 0,
+  description: "Fetch multiple Pinay videos from a specific page.",
   hasPrefix: false,
   credits: "Ry",
-  cooldowns: 10,
+  cooldowns: 15,
   category: "media",
   usages: "[page number]"
 };
@@ -17,46 +17,46 @@ module.exports.config = {
 module.exports.run = async function ({ api, event, args }) {
   const threadID = event.threadID;
   const messageID = event.messageID;
-
   const page = parseInt(args[0]) || 1;
 
   try {
-    api.sendMessage(`📥 Fetching Pinay video from page ${page}, please wait...`, threadID, messageID);
+    api.sendMessage(`📥 Fetching Pinay videos from page ${page}, please wait...`, threadID, messageID);
 
-    const response = await axios.get(`https://betadash-api-swordslush-production.up.railway.app/pinayot?page=${page}`);
-    const video = response.data?.result?.[0];
+    const res = await axios.get(`https://betadash-api-swordslush-production.up.railway.app/pinayot?page=${page}`);
+    const videos = res.data?.result;
 
-    if (!video || !video.videoUrl) {
-      return api.sendMessage("❌ No video found on that page. Try a different one.", threadID, messageID);
+    if (!videos || videos.length === 0) {
+      return api.sendMessage("❌ No videos found on that page. Try another one.", threadID, messageID);
     }
 
-    const fileName = `${messageID}_pinayot.mp4`;
-    const filePath = path.join(__dirname, fileName);
+    for (const video of videos) {
+      if (!video.videoUrl) continue;
 
-    const videoStream = await axios({
-      method: 'GET',
-      url: video.videoUrl,
-      responseType: 'stream'
-    });
+      const fileName = `${Date.now()}_pinayot.mp4`;
+      const filePath = path.join(__dirname, fileName);
 
-    const writer = fs.createWriteStream(filePath);
-    videoStream.data.pipe(writer);
+      const videoStream = await axios({
+        method: 'GET',
+        url: video.videoUrl,
+        responseType: 'stream'
+      });
 
-    writer.on('finish', async () => {
-      api.sendMessage({
+      const writer = fs.createWriteStream(filePath);
+      videoStream.data.pipe(writer);
+
+      await new Promise((resolve, reject) => {
+        writer.on('finish', resolve);
+        writer.on('error', reject);
+      });
+
+      await api.sendMessage({
         body: `🎥 ${video.description}\n📅 Uploaded: ${video.uploadDate}`,
         attachment: fs.createReadStream(filePath)
-      }, threadID, () => {
-        fs.unlinkSync(filePath);
-      }, messageID);
-    });
+      }, threadID, () => fs.unlinkSync(filePath));
+    }
 
-    writer.on('error', () => {
-      api.sendMessage("🚫 Error saving the video. Try again later.", threadID, messageID);
-    });
-
-  } catch (error) {
-    console.error("❌ Error:", error);
-    api.sendMessage("🚫 Failed to fetch video. Please try again later.", threadID, messageID);
+  } catch (err) {
+    console.error("❌ Error fetching videos:", err);
+    api.sendMessage("🚫 An error occurred while fetching videos.", threadID, messageID);
   }
 };
