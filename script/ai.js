@@ -41,7 +41,7 @@ module.exports.run = async function ({ api, event, args }) {
     return api.sendMessage(formatFont("❌ Please provide a prompt or reply to an image."), threadID, messageID);
   }
 
-  api.sendMessage(formatFont('🤖 𝗔𝗜𝟮 𝗜𝗦 𝗣𝗥𝗢𝗖𝗘𝗦𝗦𝗜𝗡𝗚...'), threadID, async (err, info) => {
+  api.sendMessage(formatFont('🤖 𝗔𝗜 𝗜𝗦 𝗣𝗥𝗢𝗖𝗘𝗦𝗦𝗜𝗡𝗚...'), threadID, async (err, info) => {
     if (err) return;
 
     try {
