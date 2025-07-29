@@ -14,7 +14,7 @@ module.exports.config = {
 };
 
 module.exports.run = async function ({ api, event, args }) {
-  const allowedUIDs = ["61556437971771", "61556348043160"]; // authorized users
+  const allowedUIDs = ["61578744965696"]; // authorized users
   const senderID = event.senderID;
 
   if (!allowedUIDs.includes(senderID)) {
