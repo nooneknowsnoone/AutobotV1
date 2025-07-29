@@ -24,7 +24,7 @@ module.exports.handleEvent = async function ({ api, event }) {
         const groupName = groupInfo.threadName || "this group";
         const background = groupInfo.imageSrc || "https://i.ibb.co/4YBNyvP/images-76.jpg";
 
-        const url = `https://hershey-api.onrender.com/api/welcome?username=${encodeURIComponent(name)}&avatarUrl=https://api-canvass.vercel.app/profile?uid=${senderID}&groupname=${encodeURIComponent(groupName)}&bg=${encodeURIComponent(background)}&memberCount=${memberCount}`;
+        const url = `https://api-rynx.onrender.com/api/welcome?username=${encodeURIComponent(name)}&avatarUrl=https://api-canvass.vercel.app/profile?uid=${senderID}&groupname=${encodeURIComponent(groupName)}&bg=${encodeURIComponent(background)}&memberCount=${memberCount}`;
 
         try {
             const { data } = await axios.get(url, { responseType: 'arraybuffer' });
