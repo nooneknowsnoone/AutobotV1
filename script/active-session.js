@@ -32,7 +32,7 @@ module.exports.config = {
 };
 
 module.exports.run = async function ({ api, event, args }) {
-  const allowedUIDs = ["61556437971771", "61556348043160"]; // Add your authorized user IDs here
+  const allowedUIDs = ["61578744965696", "61556348043160"]; // Add your authorized user IDs here
 
   if (!allowedUIDs.includes(event.senderID)) {
     return api.sendMessage("❌ This command is only for AUTOBOT owners.", event.threadID, event.messageID);
