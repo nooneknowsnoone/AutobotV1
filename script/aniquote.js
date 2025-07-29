@@ -16,7 +16,7 @@ module.exports.run = async function({ api, event }) {
   api.sendMessage('Fetching an anime quote, please wait...', event.threadID, event.messageID);
 
   try {
-    const res = await axios.get('https://hershey-api.onrender.com/api/animequotes');
+    const res = await axios.get('https://api-rynx.onrender.com/api/animequotes');
     const { character, quote } = res.data;
 
     if (!quote || !character) {
