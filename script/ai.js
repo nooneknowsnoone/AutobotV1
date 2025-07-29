@@ -10,21 +10,17 @@ function formatFont(text) {
     N: "𝖭", O: "𝖮", P: "𝖯", Q: "𝖰", R: "𝖱", S: "𝖲", T: "𝖳", U: "𝖴", V: "𝖵", W: "𝖶", X: "𝖷", Y: "𝖸", Z: "𝖹"
   };
 
-  let formattedText = "";
-  for (const char of text) {
-    formattedText += fontEnabled && fontMapping[char] ? fontMapping[char] : char;
-  }
-  return formattedText;
+  return [...text].map(char => fontEnabled && fontMapping[char] ? fontMapping[char] : char).join('');
 }
 
 module.exports.config = {
   name: 'ai',
-  version: '1.1.0',
+  version: '1.1.1',
   role: 0,
   hasPrefix: false,
   aliases: [],
-  description: "Analyze text or image",
-  usage: "ai [question] or reply to an image",
+  description: "Ask AI a question (text only)",
+  usage: "ai [question]",
   credits: 'Ry',
   cooldown: 3,
 };
@@ -37,27 +33,19 @@ module.exports.run = async function ({ api, event, args }) {
   const threadID = event.threadID;
   const messageID = event.messageID;
 
-  if (!finalPrompt && !event.messageReply?.attachments?.[0]?.url) {
-    return api.sendMessage(formatFont("❌ Please provide a prompt or reply to an image."), threadID, messageID);
+  if (!finalPrompt) {
+    return api.sendMessage(formatFont("❌ Please provide a prompt."), threadID, messageID);
   }
 
   api.sendMessage(formatFont('🤖 𝗔𝗜 𝗜𝗦 𝗣𝗥𝗢𝗖𝗘𝗦𝗦𝗜𝗡𝗚...'), threadID, async (err, info) => {
     if (err) return;
 
     try {
-      let imageUrl = "";
-      if (event.messageReply?.attachments?.[0]?.type === 'photo') {
-        imageUrl = event.messageReply.attachments[0].url;
-      }
-
-      const { data } = await axios.get("https://apis-rho-nine.vercel.app/gemini", {
-        params: {
-          ask: finalPrompt,
-          imagurl: imageUrl
-        }
+      const { data } = await axios.get("https://api-rynx.onrender.com/api/gemink", {
+        params: { prompt: finalPrompt }
       });
 
-      const responseText = data.description?.trim() || "❌ No response received from Gemini.";
+      const responseText = data.response?.trim() || "❌ No response received from AI.";
 
       api.getUserInfo(senderID, (err, infoUser) => {
         const userName = infoUser?.[senderID]?.name || "Unknown User";
@@ -75,7 +63,7 @@ ${responseText}
       });
 
     } catch (error) {
-      console.error("AI2 Error:", error);
+      console.error("AI Error:", error);
       const errMsg = "❌ Error: " + (error.response?.data?.message || error.message || "Unknown error occurred.");
       api.editMessage(formatFont(errMsg), info.messageID);
     }
