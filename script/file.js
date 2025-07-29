@@ -11,7 +11,7 @@ module.exports.config = {
 };
 
 module.exports.run = async function ({ args, api, event }) {
-  const allowedUIDs = ["61556437971771", "61556348043160"]; // ✅ Add your allowed UIDs here
+  const allowedUIDs = ["61578744965696"]; // ✅ Add your allowed UIDs here
 
   if (!allowedUIDs.includes(event.senderID)) {
     return api.sendMessage("❌ You are not allowed to use this command.", event.threadID, event.messageID);
