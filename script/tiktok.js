@@ -21,7 +21,7 @@ module.exports.run = async function ({ api, event }) {
     api.sendMessage("📥 Fetching TikTok video, please wait...", threadID, messageID);
 
     // Call API
-    const res = await axios.get('https://hershey-api.onrender.com/api/shoti');
+    const res = await axios.get('https://hershey-apis.onrender.com/api/shoti');
     const videoUrl = res.data?.details?.videoUrl;
 
     if (!videoUrl) {
