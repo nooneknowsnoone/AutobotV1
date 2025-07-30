@@ -27,7 +27,7 @@ module.exports.run = async function({ api, event, args }) {
     if (err) return;
 
     try {
-      const url = `https://hershey-api.onrender.com/api/webster?word=${encodeURIComponent(word)}`;
+      const url = `https://hershey-apis.onrender.com/api/webster?word=${encodeURIComponent(word)}`;
       const { data } = await axios.get(url);
 
       if (!data || !data.definitions || data.definitions.length === 0) {
