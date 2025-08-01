@@ -9,50 +9,48 @@ function formatFont(text) {
     A: "𝖠", B: "𝖡", C: "𝖢", D: "𝖣", E: "𝖤", F: "𝖥", G: "𝖦", H: "𝖧", I: "𝖨", J: "𝖩", K: "𝖪", L: "𝖫", M: "𝖬",
     N: "𝖭", O: "𝖮", P: "𝖯", Q: "𝖰", R: "𝖱", S: "𝖲", T: "𝖳", U: "𝖴", V: "𝖵", W: "𝖶", X: "𝖷", Y: "𝖸", Z: "𝖹"
   };
-
   return [...text].map(char => fontEnabled && fontMapping[char] ? fontMapping[char] : char).join('');
 }
 
 module.exports.config = {
   name: 'ai',
-  version: '1.1.1',
+  version: '1.0.0',
   role: 0,
   hasPrefix: false,
-  aliases: [],
-  description: "Ask AI a question (text only)",
-  usage: "ai [question]",
+  aliases: ['askai', 'ryxbot'],
+  description: "Ask anything to Gemini AI",
+  usage: "ai [your question]",
   credits: 'Ry',
   cooldown: 3,
 };
 
 module.exports.run = async function ({ api, event, args }) {
   const promptText = args.join(" ").trim();
-  const userReply = event.messageReply?.body || '';
-  const finalPrompt = `${userReply} ${promptText}`.trim();
   const senderID = event.senderID;
   const threadID = event.threadID;
   const messageID = event.messageID;
 
-  if (!finalPrompt) {
+  if (!promptText) {
     return api.sendMessage(formatFont("❌ Please provide a prompt."), threadID, messageID);
   }
 
-  api.sendMessage(formatFont('🤖 𝗔𝗜 𝗜𝗦 𝗣𝗥𝗢𝗖𝗘𝗦𝗦𝗜𝗡𝗚...'), threadID, async (err, info) => {
+  api.sendMessage(formatFont('🤖 𝗔𝗜 𝗜𝗦 𝗧𝗛𝗜𝗡𝗞𝗜𝗡𝗚...'), threadID, async (err, info) => {
     if (err) return;
 
     try {
-      const { data } = await axios.get("https://api-rynx.onrender.com/api/gemink", {
-        params: { prompt: finalPrompt }
+      const res = await axios.get(`https://api-rynx.onrender.com/api/gemink`, {
+        params: { prompt: promptText },
+        headers: { "Content-Type": "application/json" }
       });
 
-      const responseText = data.response?.trim() || "❌ No response received from AI.";
+      const responseText = res.data?.response?.trim() || "❌ No response from GeminiK AI.";
 
       api.getUserInfo(senderID, (err, infoUser) => {
         const userName = infoUser?.[senderID]?.name || "Unknown User";
         const timePH = new Date(Date.now() + 8 * 60 * 60 * 1000).toLocaleString('en-US', { hour12: false });
 
         const replyMessage = `
-🤖 𝗔𝗜 𝗔𝗦𝗦𝗜𝗦𝗧𝗔𝗡𝗧 ★
+🤖 𝗚𝗘𝗠𝗜𝗡𝗜 𝗔𝗜
 ━━━━━━━━━━━━━━━━━━
 ${responseText}
 ━━━━━━━━━━━━━━━━━━
@@ -63,8 +61,8 @@ ${responseText}
       });
 
     } catch (error) {
-      console.error("AI Error:", error);
-      const errMsg = "❌ Error: " + (error.response?.data?.message || error.message || "Unknown error occurred.");
+      console.error("GeminiK API Error:", error);
+      const errMsg = "❌ Error: " + (error.response?.data?.message || error.message || "Unknown error.");
       api.editMessage(formatFont(errMsg), info.messageID);
     }
   });
