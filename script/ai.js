@@ -17,7 +17,7 @@ module.exports.config = {
   version: '1.0.0',
   role: 0,
   hasPrefix: false,
-  aliases: ['askai', 'ryxbot'],
+  aliases: ['sigbin', 'ryxbot'],
   description: "Ask anything to Gemini AI",
   usage: "ai [your question]",
   credits: 'Ry',
