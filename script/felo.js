@@ -13,13 +13,13 @@ function formatFont(text) {
 }
 
 module.exports.config = {
-  name: 'ai',
+  name: 'felo',
   version: '1.0.0',
   role: 0,
   hasPrefix: false,
-  aliases: ['askai', 'ryxbot'],
-  description: "Ask anything to Gemini AI",
-  usage: "ai [your question]",
+  aliases: ['felobot', 'askfelo'],
+  description: "Ask anything to Felo AI",
+  usage: "felo [your question]",
   credits: 'Ry',
   cooldown: 3,
 };
@@ -34,23 +34,28 @@ module.exports.run = async function ({ api, event, args }) {
     return api.sendMessage(formatFont("❌ Please provide a prompt."), threadID, messageID);
   }
 
-  api.sendMessage(formatFont('🤖 𝗔𝗜 𝗜𝗦 𝗧𝗛𝗜𝗡𝗞𝗜𝗡𝗚...'), threadID, async (err, info) => {
+  api.sendMessage(formatFont('🤖 𝗙𝗘𝗟𝗢 𝗜𝗦 𝗧𝗛𝗜𝗡𝗞𝗜𝗡𝗚...'), threadID, async (err, info) => {
     if (err) return;
 
     try {
-      const res = await axios.get(`https://api-rynx.onrender.com/api/gemink`, {
-        params: { prompt: promptText },
-        headers: { "Content-Type": "application/json" }
+      const res = await axios.get("https://api.ferdev.my.id/ai/felo", {
+        params: {
+          prompt: promptText,
+          apikey: "lain-lain"
+        },
+        headers: {
+          "Content-Type": "application/json"
+        }
       });
 
-      const responseText = res.data?.response?.trim() || "❌ No response from GeminiK AI.";
+      const responseText = res.data?.message || "❌ No response from Felo AI.";
 
       api.getUserInfo(senderID, (err, infoUser) => {
         const userName = infoUser?.[senderID]?.name || "Unknown User";
         const timePH = new Date(Date.now() + 8 * 60 * 60 * 1000).toLocaleString('en-US', { hour12: false });
 
         const replyMessage = `
-🤖 𝗚𝗘𝗠𝗜𝗡𝗜 𝗔𝗜
+🤖 𝗙𝗘𝗟𝗢 𝗔𝗜
 ━━━━━━━━━━━━━━━━━━
 ${responseText}
 ━━━━━━━━━━━━━━━━━━
@@ -61,7 +66,7 @@ ${responseText}
       });
 
     } catch (error) {
-      console.error("GeminiK API Error:", error);
+      console.error("Felo API Error:", error);
       const errMsg = "❌ Error: " + (error.response?.data?.message || error.message || "Unknown error.");
       api.editMessage(formatFont(errMsg), info.messageID);
     }
