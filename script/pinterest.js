@@ -4,81 +4,70 @@ const path = require("path");
 
 module.exports.config = {
   name: "pinterest",
-  version: "1.0.0",
+  version: "1.1.0",
   role: 0,
-  credits: "Kayden",
-  description: "Searches and streams images from Pinterest",
-  hasPrefix: true,
-  aliases: ["pin"],
-  usage: "pinterest <keyword> - <limit>",
+  credits: "Ry Kayden",
+  description: "Search and send Pinterest images by keyword and amount",
+  hasPrefix: false,
+  aliases: [],
+  usage: "pinterest <keyword> - <amount>\nExample: pinterest dog - 6",
   cooldown: 5,
 };
 
 module.exports.run = async function ({ api, event, args }) {
+  const input = args.join(" ").trim();
+  if (!input.includes(" - ")) {
+    return api.sendMessage("❌ Invalid format.\nUse: pinterest <keyword> - <amount>\nExample: pinterest dog - 6", event.threadID, event.messageID);
+  }
+
+  const [keyword, amountText] = input.split(" - ");
+  const amount = parseInt(amountText);
+
+  if (!keyword || isNaN(amount) || amount <= 0) {
+    return api.sendMessage("❌ Invalid keyword or amount.\nUse: pinterest <keyword> - <amount>", event.threadID, event.messageID);
+  }
+
+  if (amount > 50) {
+    return api.sendMessage("⚠️ Maximum allowed images is 50. Please use a lower amount.", event.threadID, event.messageID);
+  }
+
   try {
-    const input = args.join(" ");
-    if (!input.includes(" - ")) {
-      return api.sendMessage(
-        "❌ Usage: pinterest <keyword> - <limit>\nExample: pinterest cat - 5",
-        event.threadID,
-        event.messageID
-      );
-    }
+    api.sendMessage(`🔍 Searching Pinterest for "${keyword}" (${amount} images)...`, event.threadID);
 
-    const [keyword, limit] = input.split(" - ");
-    const count = parseInt(limit.trim());
-
-    if (!keyword || isNaN(count) || count < 1 || count > 30) {
-      return api.sendMessage(
-        "❌ Please provide a valid keyword and a number between 1–30.\nExample: pinterest anime - 10",
-        event.threadID,
-        event.messageID
-      );
-    }
-
-    api.sendMessage(
-      `🔍 Searching Pinterest for "${keyword.trim()}" (${count} images)...`,
-      event.threadID
-    );
-
-    const apiUrl = `https://ccprojectsapis.zetsu.xyz/api/pin?title=${encodeURIComponent(keyword.trim())}&count=${count}`;
+    const apiUrl = `https://api-rynx.onrender.com/api/pinterest?q=${encodeURIComponent(keyword)}&amount=${amount}`;
     const response = await axios.get(apiUrl);
-    const images = response.data.data;
+    const results = response.data?.results;
 
-    if (!images || images.length === 0) {
-      return api.sendMessage(
-        `❌ No results found for "${keyword.trim()}".`,
-        event.threadID
-      );
+    if (!results || results.length === 0) {
+      return api.sendMessage(`❌ No results found for "${keyword}".`, event.threadID, event.messageID);
     }
 
     const imagePaths = [];
 
-    for (let i = 0; i < Math.min(count, images.length); i++) {
-      const url = images[i];
-      const imageRes = await axios.get(url, { responseType: "arraybuffer" });
-      const imgPath = path.join(__dirname, `pin_${i}.jpg`);
-      fs.writeFileSync(imgPath, imageRes.data);
+    for (let i = 0; i < results.length; i++) {
+      const imageUrl = results[i];
+      const imgRes = await axios.get(imageUrl, { responseType: "arraybuffer" });
+      const imgPath = path.join(__dirname, `pinterest_${event.senderID}_${i}.jpg`);
+      fs.writeFileSync(imgPath, imgRes.data);
       imagePaths.push(imgPath);
     }
 
-    const attachments = imagePaths.map(imgPath => fs.createReadStream(imgPath));
+    const attachments = imagePaths.map(p => fs.createReadStream(p));
 
     api.sendMessage(
       {
-        body: `✅ Here are ${attachments.length} result(s) for "${keyword.trim()}"`,
+        body: `📌 Pinterest results for: "${keyword}"`,
         attachment: attachments,
       },
       event.threadID,
       () => {
+        // Cleanup
         imagePaths.forEach(p => fs.unlinkSync(p));
       }
     );
-  } catch (error) {
-    console.error("Pinterest command error:", error);
-    api.sendMessage(
-      "❌ An error occurred while fetching or sending the images.",
-      event.threadID
-    );
+
+  } catch (err) {
+    console.error("Pinterest command error:", err);
+    api.sendMessage("❌ An error occurred while fetching Pinterest images.", event.threadID);
   }
 };
