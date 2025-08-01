@@ -38,7 +38,7 @@ module.exports.handleEvent = async function ({ api, event }) {
 
         // Welcome image API
         const apiKey = "86397083-298d-4b97-a76e-414c1208beae";
-        const welcomeUrl = `https://kaiz-apis.gleeze.com/api/welcome?username=${encodeURIComponent(name)}&avatarUrl=${encodeURIComponent(avatarUrl)}&groupname=${encodeURIComponent(groupName)}&bg=${encodeURIComponent(background)}&memberCount=${memberCount}&apikey=${apiKey}`;
+        const welcomeUrl = `https://kaiz-apis.gleeze.com/api/welcome?username=${encodeURIComponent(name)}&avatarUrl=https://api-rynx.onrender.com/api/profile?uid=${senderID}&groupname=${encodeURIComponent(groupName)}&bg=${encodeURIComponent(background)}&memberCount=${memberCount}&apikey=${apiKey}`;
 
         try {
             const { data } = await axios.get(welcomeUrl, { responseType: 'arraybuffer' });
