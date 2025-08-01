@@ -8,32 +8,52 @@ module.exports.config = {
 
 module.exports.handleEvent = async function ({ api, event }) {
     if (event.logMessageType === "log:subscribe") {
-        const addedUserId = event.logMessageData.addedParticipants[0]?.userFbId;
-        const name = event.logMessageData.addedParticipants[0]?.fullName || "New Member";
+        const addedParticipants = event.logMessageData.addedParticipants;
+        const senderID = addedParticipants[0].userFbId;
 
-        // Truncate long names for better card fitting
+        // Fetch user profile name
+        let name = await api.getUserInfo(senderID).then(info => info[senderID].name);
+
+        // Truncate name if too long
         const maxLength = 15;
-        const shortName = name.length > maxLength ? name.slice(0, maxLength - 3) + '...' : name;
+        if (name.length > maxLength) {
+            name = name.substring(0, maxLength - 3) + '...';
+        }
 
+        // Get group info
         const groupInfo = await api.getThreadInfo(event.threadID);
-        const groupName = groupInfo.threadName || "this group";
         const memberCount = groupInfo.participantIDs.length;
-        const background = groupInfo.imageSrc || "https://i.imgur.com/TnU0KWm.jpeg";
+        const groupName = groupInfo.threadName || "this group";
+        const background = groupInfo.imageSrc || "https://i.ibb.co/4YBNyvP/images-76.jpg";
 
-        const apiURL = `https://api-rynx.onrender.com/api/welcome?username=${encodeURIComponent(shortName)}&avatarUrl=https://api-rynx.onrender.com/api/profile?uid=${addedUserId}&groupname=${encodeURIComponent(groupName)}&bg=${encodeURIComponent(background)}&memberCount=${memberCount}`;
+        // Fetch avatar using profile API only
+        let avatarUrl;
+        try {
+            const profileRes = await axios.get(`https://api-rynx.onrender.com/api/profile?uid=${senderID}`);
+            avatarUrl = profileRes.data.url;
+        } catch (e) {
+            console.error("Failed to fetch avatar from profile API.");
+            avatarUrl = "https://i.ibb.co/G5mJZxs/rin.jpg"; // fallback avatar
+        }
+
+        // Welcome image API
+        const apiKey = "86397083-298d-4b97-a76e-414c1208beae";
+        const welcomeUrl = `https://kaiz-apis.gleeze.com/api/welcome?username=${encodeURIComponent(name)}&avatarUrl=${encodeURIComponent(avatarUrl)}&groupname=${encodeURIComponent(groupName)}&bg=${encodeURIComponent(background)}&memberCount=${memberCount}&apikey=${apiKey}`;
 
         try {
-            const { data } = await axios.get(apiURL, { responseType: 'arraybuffer' });
+            const { data } = await axios.get(welcomeUrl, { responseType: 'arraybuffer' });
             const filePath = './script/cache/welcome_image.jpg';
             fs.writeFileSync(filePath, Buffer.from(data));
 
             api.sendMessage({
-                body: `🎉 Welcome ${name} to ${groupName}!`,
+                body: `🎉 Everyone welcome the new member ${name} to ${groupName}!`,
                 attachment: fs.createReadStream(filePath)
             }, event.threadID, () => fs.unlinkSync(filePath));
-        } catch (err) {
-            console.error("Error generating welcome image:", err);
-            api.sendMessage(`👋 Welcome ${name} to ${groupName}!`, event.threadID);
+        } catch (error) {
+            console.error("Error fetching welcome image:", error);
+            api.sendMessage({
+                body: `🎉 Everyone welcome the new member ${name} to ${groupName}!`
+            }, event.threadID);
         }
     }
 };
