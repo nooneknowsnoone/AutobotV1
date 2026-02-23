@@ -3,7 +3,7 @@ const path = require('path');
 const fs = require('fs-extra');
 
 module.exports.config = {
-  name: "tiktok",
+  name: "shoti",
   version: "1.0.0",
   role: 0,
   description: "Fetch a random TikTok shoti video .",
@@ -21,7 +21,7 @@ module.exports.run = async function ({ api, event }) {
     api.sendMessage("📥 Fetching TikTok video, please wait...", threadID, messageID);
 
     // Call API
-    const res = await axios.get('https://hershey-apis.onrender.com/api/shoti');
+    const res = await axios.get('https://kneega-api.onrender.com/api/shoti');
     const videoUrl = res.data?.details?.videoUrl;
 
     if (!videoUrl) {
